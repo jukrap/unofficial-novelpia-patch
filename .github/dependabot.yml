@@ -5,10 +5,12 @@ updates:
     schedule:
       interval: weekly
     target-branch: develop
+    labels: [dependencies, 'area: tooling']
     open-pull-requests-limit: 3
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
     target-branch: develop
+    labels: [dependencies, 'area: tooling']
     open-pull-requests-limit: 3
