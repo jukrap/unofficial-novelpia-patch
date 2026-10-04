@@ -1,32 +1,73 @@
 name: 문제 신고
-description: 동작 오류나 화면 문제를 알려 주세요.
-title: 'fix: '
+description: 재현 순서와 사용 환경을 알려 주시면 동작·화면 오류를 확인하겠습니다.
+title: '[문제] '
+labels: [bug, 'status: triage']
 body:
   - type: markdown
     attributes:
-      value: '계정 정보·인증 정보·작품 원문은 올리지 마세요. 화면을 첨부할 때는 필요한 부분만 남겨 주세요. 보안 문제는 SECURITY.md의 비공개 신고를 이용해 주세요.'
+      value: |
+        비슷한 [기존 이슈](https://github.com/jukrap/unofficial-novelpia-patch/issues?q=is%3Aissue)를 먼저 확인해 주세요. 원인을 모르거나 재현이 불규칙해도 적을 수 있습니다.
+        계정·쿠키·인증 정보와 작품 원문은 제외해 주세요. 보안 문제는 [비공개 제보 안내](https://github.com/jukrap/unofficial-novelpia-patch/blob/main/SECURITY.md)를 따릅니다.
   - type: input
-    id: version
+    id: environment
     attributes:
-      label: 확장 버전과 브라우저 버전
-      placeholder: '확장 0.1.0 / Chrome 버전 / Windows 또는 다른 운영체제'
+      label: 사용 환경
+      description: 확장 버전은 팝업 또는 정보 탭에서 확인할 수 있습니다. 모르는 항목은 모름이라고 적어 주세요.
+      placeholder: '확장 0.1.0 / Chrome 000.0 / Windows 11'
     validations:
       required: true
+  - type: dropdown
+    id: installation
+    attributes:
+      label: 설치 방법
+      options:
+        - Chrome 웹 스토어
+        - 압축해제된 확장 로드 / 직접 빌드
+        - 잘 모르겠음
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: 문제가 나타나는 곳
+      multiple: true
+      options:
+        - 스크롤 읽기
+        - 페이지 읽기 / 읽던 위치
+        - 테마박스 / 설정 페이지 / 팝업
+        - 프리셋
+        - 글꼴 / 굵은 텍스트
+        - 파일 등록 / 설정 가져오기 / 통계
+        - 설치 / 확장 켜기·끄기
+        - 기타 / 잘 모르겠음
   - type: textarea
     id: reproduction
     attributes:
-      label: 재현 방법
-      description: 읽기 방식과 관련 설정, 수행한 순서를 알려 주세요.
+      label: 어떤 순서로 발생하나요?
+      description: 항상 발생하는지, 특정 회차나 설정에서만 발생하는지도 알려 주세요.
+      placeholder: |
+        1. 회차를 열고 페이지 읽기로 바꿉니다.
+        2. 두 쪽 보기에서 마지막 쪽으로 이동합니다.
+        3. ...
     validations:
       required: true
   - type: textarea
     id: actual
     attributes:
-      label: 기대한 결과와 실제 결과
+      label: 기대한 동작과 실제 동작
+      placeholder: |
+        기대한 동작:
+        실제 동작:
     validations:
       required: true
   - type: textarea
+    id: settings
+    attributes:
+      label: 관련 설정이나 확인한 조건
+      description: 필요한 항목만 적어 주세요. 설정 파일 전체를 첨부할 필요는 없습니다.
+      placeholder: '예: 두 쪽 / 높이 70% / 하단 고정 / 특정 글꼴에서만 발생. 회차 주소는 공유할 수 있을 때만 적어 주세요.'
+  - type: textarea
     id: evidence
     attributes:
-      label: 추가 정보
-      description: 개인정보와 작품 원문을 제외한 오류 메시지·화면을 첨부할 수 있습니다.
+      label: 오류 메시지·화면 또는 추가 설명
+      description: 필요한 부분만 첨부하고 작품 원문과 개인 정보를 가려 주세요. 쿠키가 포함될 수 있는 HAR·브라우저 프로필·전체 추적 파일은 올리지 마세요.
