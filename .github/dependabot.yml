@@ -7,6 +7,17 @@ updates:
     target-branch: develop
     labels: [dependencies, 'area: tooling']
     open-pull-requests-limit: 3
+    ignore:
+      # Node의 주요 버전은 실행 환경·CI·타입을 함께 확인한 뒤 올립니다.
+      - dependency-name: '@types/node'
+        update-types: ['version-update:semver-major']
+    groups:
+      eslint-tooling:
+        patterns:
+          - eslint
+          - '@eslint/js'
+          - '@typescript-eslint/*'
+          - eslint-config-prettier
   - package-ecosystem: github-actions
     directory: /
     schedule:
