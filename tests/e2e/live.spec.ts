@@ -523,8 +523,7 @@ test('live scroll viewport and fixed navigation 58128', async () => {
     worker.evaluate(
       async () =>
         (await chrome.storage.local.get('unp.bookmark.v1.58128'))['unp.bookmark.v1.58128'] as
-          | { blockKey: string; textOffset: number; edge: string }
-          | undefined
+          { blockKey: string; textOffset: number; edge: string } | undefined
     );
   await expect.poll(saved).toBeTruthy();
   const anchor = (await saved())!;

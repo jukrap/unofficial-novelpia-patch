@@ -15,9 +15,7 @@ const send: StatsTransport = async (command) => {
   if (!hasExtensionContext())
     throw new Error('확장 연결이 종료되었습니다. 이 페이지를 새로고침해 주세요.');
   const reply = (await chrome.runtime.sendMessage({ channel: STATS_CHANNEL, ...command })) as
-    | { ok: true; snapshot: ReadingStatsSnapshot }
-    | { ok: false; error: string }
-    | undefined;
+    { ok: true; snapshot: ReadingStatsSnapshot } | { ok: false; error: string } | undefined;
   if (!reply?.ok)
     throw new Error(reply?.error || '통계에 연결하지 못했습니다. 다시 시도해 주세요.');
   return reply.snapshot;

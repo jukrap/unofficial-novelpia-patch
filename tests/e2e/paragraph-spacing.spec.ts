@@ -66,8 +66,8 @@ async function update(patch: Record<string, unknown>) {
 }
 async function measure() {
   return page.locator('[data-unp-reader]').evaluate((body) => {
-    const elements = [0, 1, 2, 3].map(
-      (n) => body.querySelector<HTMLElement>(`.line[data-line="${n}"]`)!
+    const elements = [0, 1, 2, 3].map((n) =>
+      body.querySelector<HTMLElement>(`.line[data-line="${n}"]`)!
     );
     const rects = elements.map((e) => e.getBoundingClientRect());
     const range = document.createRange();

@@ -89,8 +89,7 @@ export class SettingsStore {
         });
         const verified = await this.storage.sync.get(SETTINGS_KEY);
         const document = verified[SETTINGS_KEY] as
-          | { schemaVersion?: number; data?: unknown }
-          | undefined;
+          { schemaVersion?: number; data?: unknown } | undefined;
         const checked = settingsSchema.safeParse(document?.data);
         if (
           document?.schemaVersion !== 1 ||
@@ -120,8 +119,7 @@ export class SettingsStore {
   }
   private receive(raw: unknown) {
     const value = raw as
-      | { schemaVersion?: number; data?: unknown; pendingPageEffectMigration?: boolean }
-      | undefined;
+      { schemaVersion?: number; data?: unknown; pendingPageEffectMigration?: boolean } | undefined;
     if (value && value.schemaVersion !== 1) {
       this.writable = false;
       this.publish({
