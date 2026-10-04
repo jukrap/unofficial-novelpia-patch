@@ -1,6 +1,7 @@
 import { STARTUP_KEY, startupTheme, type StartupTheme } from '@/shared/platform/startup';
 import { chromeStorage } from '@/shared/platform/storage';
 import { readingSurfacePalette } from '@/shared/config/reading-surface-palette';
+import { animateBook } from '@/shared/lib/loading-motion';
 
 export interface ViewerPreparation {
   claim(theme: StartupTheme): void;
@@ -21,6 +22,7 @@ export function prepareViewer(): ViewerPreparation {
   let handedOff = false;
   let theme: StartupTheme | null = null;
   let loader: HTMLElement | undefined;
+  let loaderMotion: ReturnType<typeof animateBook> | undefined;
   let loaderDue = false;
   let emptyTimer: ReturnType<typeof setTimeout> | undefined;
   const failureTimer = window.setTimeout(cleanup, 2500);
@@ -38,7 +40,7 @@ export function prepareViewer(): ViewerPreparation {
       if (surface)
         colors += `#load_bar>div{color:${surface.ink}!important;background-color:${surface.paper}!important;background-image:none!important;border-color:${surface.border}!important}`;
     }
-    sheet.textContent = `${guard}\n${colors}\n#unp-reader-loading svg{animation:unp-book 850ms ease-in-out infinite alternate}@keyframes unp-book{to{opacity:.45;transform:translateY(-2px)}}@media(prefers-reduced-motion:reduce){#unp-reader-loading svg{animation:none}}`;
+    sheet.textContent = `${guard}\n${colors}`;
   };
   function sync() {
     if (stopped) return;
@@ -63,6 +65,7 @@ export function prepareViewer(): ViewerPreparation {
     }
     const text = document.getElementById('novel_text');
     if (!loaderDue || nativeVisible || !text) {
+      loaderMotion?.cancel();
       loader?.remove();
       return;
     }
@@ -76,7 +79,10 @@ export function prepareViewer(): ViewerPreparation {
       loader.innerHTML =
         '<svg width="28" height="24" viewBox="0 0 28 24" aria-hidden="true"><path d="M14 5C10 2 5 2 2 4v16c4-2 8-2 12 1 4-3 8-3 12-1V4c-4-2-8-2-12 1Zm0 0v16" fill="none" stroke="currentColor" stroke-width="1.7"/></svg>';
     }
-    if (!loader.isConnected) text.append(loader);
+    if (!loader.isConnected) {
+      text.append(loader);
+      loaderMotion = animateBook(loader.querySelector('svg')!);
+    }
   }
   const observer = new MutationObserver(sync);
   observer.observe(document, {
@@ -109,6 +115,7 @@ export function prepareViewer(): ViewerPreparation {
     document.removeEventListener('DOMContentLoaded', sync);
     observer.disconnect();
     sheet.remove();
+    loaderMotion?.cancel();
     loader?.remove();
     document.documentElement?.removeAttribute('data-unp-preparing');
   }

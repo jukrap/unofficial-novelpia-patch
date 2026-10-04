@@ -1,5 +1,8 @@
+import { MotionButton } from '@/shared/ui/motion-button';
 import { useEffect, useId, useRef, useState, type CSSProperties, type KeyboardEvent } from 'react';
 import { Icon } from './icon';
+import { MotionChevron } from './motion-chevron';
+import { usePopoverMotion } from './use-popover-motion';
 
 export interface SelectOption {
   value: string;
@@ -23,6 +26,7 @@ export function SelectControl({
   const id = useId();
   const trigger = useRef<HTMLButtonElement>(null);
   const popup = useRef<HTMLDivElement>(null);
+  const popupMotion = usePopoverMotion(popup);
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
   const search = useRef({ text: '', time: 0 });
@@ -38,7 +42,7 @@ export function SelectControl({
     groups.at(-1)!.items.push({ option, index });
   });
   const close = () => {
-    if (popup.current?.matches(':popover-open')) popup.current.hidePopover();
+    popupMotion.hide();
     setOpen(false);
     search.current = { text: '', time: 0 };
   };
@@ -61,6 +65,7 @@ export function SelectControl({
     menu.style.width = `${width}px`;
     menu.style.maxHeight = `${Math.max(40, Math.min(300, down ? below : above))}px`;
     menu.showPopover();
+    popupMotion.reveal();
     menu.style.left = `${Math.max(12, Math.min(rect.left, innerWidth - width - 12))}px`;
     menu.style.top = `${down ? rect.bottom + 5 : Math.max(upper, rect.top - menu.getBoundingClientRect().height - 5)}px`;
     setOpen(true);
@@ -88,7 +93,7 @@ export function SelectControl({
     const menu = popup.current!;
     const root = menu.getRootNode();
     const dismiss = () => {
-      if (menu.matches(':popover-open')) menu.hidePopover();
+      popupMotion.hide();
       setOpen(false);
     };
     const scroll = (event: Event) => {
@@ -165,7 +170,7 @@ export function SelectControl({
   };
   return (
     <div className="select-field">
-      <button
+      <MotionButton
         ref={trigger}
         type="button"
         className="select-trigger"
@@ -183,8 +188,8 @@ export function SelectControl({
         }}
       >
         <span style={selected?.textStyle}>{selected?.label ?? value}</span>
-        <Icon name="chevron" />
-      </button>
+        <MotionChevron open={open} />
+      </MotionButton>
       <div
         ref={popup}
         id={id}

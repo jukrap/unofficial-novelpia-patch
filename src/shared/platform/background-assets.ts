@@ -19,9 +19,7 @@ const decodedImages = new DecodedImageCache();
 
 async function request<T>(action: string, data: Record<string, unknown> = {}): Promise<T> {
   const result = (await chrome.runtime.sendMessage({ channel: CHANNEL, action, ...data })) as
-    | { ok: true; data: T }
-    | { ok: false; error: string }
-    | undefined;
+    { ok: true; data: T } | { ok: false; error: string } | undefined;
   if (!result?.ok)
     throw new Error(
       result?.error || '이미지 보관함에 연결하지 못했습니다. 확장을 새로고침해 주세요.'

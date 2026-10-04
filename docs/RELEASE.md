@@ -72,10 +72,10 @@ Actions 자체가 비활성 상태면 먼저 저장소 설정에서 활성화해
 ## 로컬 패키지 확인
 
 ```sh
-npm run release:check
-npm run test:release
-npm run build
-npm run release:package
+pnpm run release:check
+pnpm run test:release
+pnpm run build
+pnpm run release:package
 ```
 
 `.output/release/`에 검증한 ZIP, SHA256SUMS, 메타데이터와 릴리스 설명이 생성됩니다. 스토어에는 ZIP만 업로드합니다. 프로덕션 권한·사이트 범위·지연 청크·라이선스·개발 전용 파일 유입을 검사하며 ZIP 루트에 manifest.json이 위치합니다.

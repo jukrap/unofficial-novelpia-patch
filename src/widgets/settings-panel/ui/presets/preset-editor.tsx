@@ -1,3 +1,4 @@
+import { MotionButton } from '@/shared/ui/motion-button';
 import { useEffect, useId, useLayoutEffect, useRef, useState, type KeyboardEvent } from 'react';
 import { createPortal } from 'react-dom';
 import type { PresetDraft } from '@/entities/preset';
@@ -66,26 +67,26 @@ export function PresetEditor({
       aria-busy={busy || assetBusy}
     >
       {onDelete ? (
-        <button
+        <MotionButton
           type="button"
           className="text-button preset-delete"
           disabled={busy || assetBusy || conflict}
           onClick={onDelete}
         >
           삭제
-        </button>
+        </MotionButton>
       ) : (
         <span />
       )}
       <div className="button-row">
         <DelayedLoading busy={busy} label="프리셋 저장 중" variant="spinner" />
-        <button type="button" disabled={busy} onClick={onCancel}>
+        <MotionButton type="button" disabled={busy} onClick={onCancel}>
           취소
-        </button>
-        <button type="submit" form={`${id}-form`} disabled={busy || assetBusy || conflict}>
+        </MotionButton>
+        <MotionButton type="submit" form={`${id}-form`} disabled={busy || assetBusy || conflict}>
           {busy ? '저장 중…' : '저장'}
-        </button>
-        <button
+        </MotionButton>
+        <MotionButton
           type="button"
           className="primary"
           disabled={busy || assetBusy || conflict}
@@ -94,7 +95,7 @@ export function PresetEditor({
           }}
         >
           저장하고 적용
-        </button>
+        </MotionButton>
       </div>
     </footer>
   );
@@ -160,15 +161,15 @@ export function PresetEditor({
       </fieldset>
       <div className="preset-import-current">
         <Tooltip text="현재 뷰어에 적용된 설정을 이 편집 초안으로 가져옵니다. 저장 전까지 프리셋은 바뀌지 않습니다.">
-          <button type="button" disabled={busy || assetBusy} onClick={onImport}>
+          <MotionButton type="button" disabled={busy || assetBusy} onClick={onImport}>
             현재 읽기 설정 가져오기
-          </button>
+          </MotionButton>
         </Tooltip>
       </div>
       <ReadingPreview settings={draft.settings} loadFont />
       <div className="preset-editor-tabs" role="tablist" aria-label="프리셋 설정 항목">
         {editorSections.map(([value, label], index) => (
-          <button
+          <MotionButton
             key={value}
             id={`${id}-tab-${value}`}
             type="button"
@@ -181,7 +182,7 @@ export function PresetEditor({
             onClick={() => setSection(value)}
           >
             {label}
-          </button>
+          </MotionButton>
         ))}
       </div>
       <fieldset
@@ -209,13 +210,13 @@ export function PresetEditor({
           </p>
           <div className="button-row">
             {latestAvailable ? (
-              <button type="button" disabled={busy || assetBusy} onClick={onLoadLatest}>
+              <MotionButton type="button" disabled={busy || assetBusy} onClick={onLoadLatest}>
                 최신 내용 불러오기
-              </button>
+              </MotionButton>
             ) : null}
-            <button type="button" disabled={busy || assetBusy} onClick={onSaveAsNew}>
+            <MotionButton type="button" disabled={busy || assetBusy} onClick={onSaveAsNew}>
               새 프리셋으로 저장
-            </button>
+            </MotionButton>
           </div>
         </div>
       ) : null}

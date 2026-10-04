@@ -1,5 +1,8 @@
+import { MotionButton } from '@/shared/ui/motion-button';
 import { useEffect, useId, useRef, type ReactNode } from 'react';
 import { Icon } from './icon';
+import { m, useIsPresent, useReducedMotion } from 'motion/react';
+import { motionDuration } from '@/shared/config/motion';
 export function Modal({
   title,
   children,
@@ -9,6 +12,8 @@ export function Modal({
   children: ReactNode;
   onClose: () => void;
 }) {
+  const present = useIsPresent();
+  const reduced = useReducedMotion();
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
   useEffect(() => {
@@ -23,7 +28,13 @@ export function Modal({
     };
   }, []);
   return (
-    <dialog
+    <m.dialog
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: reduced ? 0 : motionDuration.popover }}
+      inert={!present}
+      aria-hidden={!present || undefined}
       ref={ref}
       className="modal"
       aria-labelledby={titleId}
@@ -34,11 +45,11 @@ export function Modal({
     >
       <header>
         <h2 id={titleId}>{title}</h2>
-        <button type="button" className="icon-button" aria-label="닫기" onClick={onClose}>
+        <MotionButton type="button" className="icon-button" aria-label="닫기" onClick={onClose}>
           <Icon name="close" />
-        </button>
+        </MotionButton>
       </header>
       {children}
-    </dialog>
+    </m.dialog>
   );
 }

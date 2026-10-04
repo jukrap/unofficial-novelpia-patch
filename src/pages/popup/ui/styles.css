@@ -117,14 +117,8 @@ body {
   font-weight: 500;
   line-height: 1.5;
   text-decoration: none;
-  transition:
-    color var(--motion-control, 120ms),
-    background-color var(--motion-control, 120ms);
 }
-.popup-links a:hover {
-  color: var(--accent-text);
-  background: var(--wash);
-}
+
 .popup-links a > svg {
   flex: none;
 }

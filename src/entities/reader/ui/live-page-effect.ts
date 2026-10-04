@@ -1,4 +1,5 @@
 import type { Settings } from '@/shared/model/preferences';
+import { animateElement, type MotionPlayback } from '@/shared/lib/motion';
 
 /** Turn the original viewport in two phases. Service DOM and handlers keep
  * their identity; the reading position changes only when the old page is edge-on
@@ -41,7 +42,7 @@ export function livePageEffect(
       entry.clipPath = 'polygon(100% 0,100% 0,0 100%,0 100%)';
     }
   }
-  let animation: Animation | undefined;
+  let animation: MotionPlayback | undefined;
   let cancelled = false;
   let committed = false;
   const apply = () => {
@@ -65,7 +66,7 @@ export function livePageEffect(
   };
   const deadline = setTimeout(complete, duration + 250);
   try {
-    animation = target.animate([rest, exit], timing);
+    animation = animateElement(target, [rest, exit], timing);
     void animation.finished
       .then(
         () => {
@@ -74,7 +75,7 @@ export function livePageEffect(
           // Cancel the transform before measuring anchors in the new page.
           apply();
           container.dataset.unpLiveTurn = 'incoming';
-          animation = target.animate([entry, rest], timing);
+          animation = animateElement(target, [entry, rest], timing);
           void animation.finished.then(complete, () => {
             if (!cancelled) complete();
           });

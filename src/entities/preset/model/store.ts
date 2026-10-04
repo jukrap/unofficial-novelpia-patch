@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { observableState } from '@/shared/model/observable-state';
 import {
   applyPresetSettings,
   defaults,
@@ -73,25 +74,21 @@ function indexOf(state: Omit<PresetSnapshot, 'error'>) {
   };
 }
 export class PresetStore {
-  private snapshot: PresetSnapshot = { presets: [], selectedId: null, error: '' };
-  private listeners = new Set<() => void>();
+  readonly state = observableState<PresetSnapshot>({ presets: [], selectedId: null, error: '' });
+  private get snapshot() {
+    return this.state.getState();
+  }
   private stop = () => {};
   private queue: Promise<unknown> = Promise.resolve();
   private busy = 0;
   private pendingReload = false;
   private writable = false;
   constructor(private storage: StoragePort) {}
-  getSnapshot = () => this.snapshot;
+  getSnapshot = this.state.getState;
   isReady = () => this.writable;
-  subscribe = (fn: () => void) => {
-    this.listeners.add(fn);
-    return () => {
-      this.listeners.delete(fn);
-    };
-  };
+  subscribe = this.state.subscribe;
   private publish(patch: Partial<PresetSnapshot>) {
-    this.snapshot = { ...this.snapshot, ...patch };
-    this.listeners.forEach((fn) => fn());
+    this.state.setState(patch);
   }
   async initialize() {
     try {
@@ -342,6 +339,6 @@ export class PresetStore {
   }
   dispose() {
     this.stop();
-    this.listeners.clear();
+    this.state.dispose();
   }
 }

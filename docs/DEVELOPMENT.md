@@ -2,19 +2,22 @@
 
 ## 환경 구성
 
-Node.js 26.10 이상, npm, Git을 사용합니다. `.nvmrc`는 검증한 Node.js 26.10.0을 지정하며 CI도 이 파일을 사용합니다. 의존성은 `package-lock.json`으로 고정합니다. Node 버전을 바꾼 뒤에는 `npm ci`로 다시 설치하세요.
+Node.js 26.10 이상, pnpm 12.9.1, Git을 사용합니다. `.nvmrc`는 검증한 Node.js 26.10.0을 지정하며 CI도 이 파일을 사용합니다. 의존성은 `pnpm-lock.yaml`으로 고정합니다. Node 버전을 바꾼 뒤에는 `pnpm install --frozen-lockfile`로 다시 설치하세요.
+
+`pnpm-workspace.yaml`은 의존성 경로 길이 기준도 Windows와 Linux에서 같게 고정합니다. 번들의 소스 구역 주석에 설치 경로가 반영되므로, 이 설정은 운영체제에 따른 청크 해시 차이를 줄이는 데 필요합니다.
 
 `@types/node`는 개발·검증에 사용하는 Node의 주요 버전과 맞춥니다. 주요 버전을 올릴 때는 `.nvmrc`·`engines`·문서를 함께 갱신하고 설치·타입·테스트·빌드 및 MV3 실행을 확인합니다. 개발용 Node 버전 변경이 확장 사용자에게 Node 설치를 요구하는 것은 아닙니다.
 
 Linux에서 공식 Node 바이너리를 쓰려면 `libatomic` 런타임이 필요합니다. Ubuntu·Debian의 패키지 이름은 `libatomic1`이며, `libatomic.so.1` 로딩 오류가 나면 이 시스템 의존성을 확인하세요. [Node의 실행 환경 요구사항](https://github.com/nodejs/node/blob/v26.10.0/BUILDING.md#official-binary-platforms-and-toolchains)을 따릅니다.
 
 ```sh
-npm ci
-npx playwright install chromium
-npm run dev
+npm install --global pnpm@12.9.1
+pnpm install --frozen-lockfile
+pnpm exec playwright install chromium
+pnpm run dev
 ```
 
-일반 빌드는 `npm run build`로 만들고 `.output/chrome-mv3`를 Chrome의 압축해제된 확장 로드 기능으로 엽니다. `npm run zip`은 배포용 ZIP을 `.output`에 생성합니다. 테스트용 빌드는 배포하지 않습니다.
+일반 빌드는 `pnpm run build`로 만들고 `.output/chrome-mv3`를 Chrome의 압축해제된 확장 로드 기능으로 엽니다. `pnpm run zip`은 배포용 ZIP을 `.output`에 생성합니다. 테스트용 빌드는 배포하지 않습니다.
 
 ## 구조
 
@@ -36,6 +39,8 @@ slice 내부는 `ui`, `model`, `api`, `lib`, `config` 등 실제 역할에 맞�
 
 ESLint 본체와 `@eslint/js`는 같은 주요 버전을 사용하고, TypeScript 파서·플러그인은 함께 갱신합니다. Dependabot에서도 이 도구들을 묶어 제안합니다. 새 규칙이 추가되면 경고를 일괄 끄기보다 실제 코드와 의도를 확인합니다.
 
+TypeScript는 현재 ESLint 파서가 지원하는 6.0 계열을 사용합니다. 7.0은 기존 JavaScript 컴파일러 API를 제공하지 않으므로 단순 버전 교체로 올리지 않습니다. 주요 버전 변경은 파서의 peer 의존성과 WXT의 타입 생성·검사까지 확인한 뒤 진행합니다. [TypeScript 7의 도구 호환 안내](https://devblogs.microsoft.com/typescript/announcing-typescript-7-0/#running-side-by-side-with-typescript-6-0)를 참고하세요.
+
 실행 영역별 책임과 설정·본문·저장소의 연결은 [구조와 데이터 흐름](ARCHITECTURE.md)에 정리했습니다.
 
 ## 빌드와 지연 로딩
@@ -47,15 +52,15 @@ ESLint 본체와 `@eslint/js`는 같은 주요 버전을 사용하고, TypeScrip
 ## 검증 명령
 
 ```sh
-npm run type-check
-npm run lint
-npm run format:check
-npm run test:unit
-npm run test:release
-npm run test:e2e
-npm run release:check
-npm run build
-npm run release:package
+pnpm run type-check
+pnpm run lint
+pnpm run format:check
+pnpm run test:unit
+pnpm run test:release
+pnpm run test:e2e
+pnpm run release:check
+pnpm run build
+pnpm run release:package
 ```
 
 `test:e2e`는 테스트용 확장을 빌드하고 Playwright의 Chromium에서 MV3 확장을 로드합니다. 페이지 계산·북마크·읽던 위치·설정 UI·등록 파일·전환·초기 로딩 등을 합성 본문으로 검사합니다. 각 검사는 임시 브라우저 프로필을 사용합니다.
@@ -71,9 +76,9 @@ CI는 Linux에서 정적 검사·단위 검사·일반 빌드를, Windows에서 
 | 페이지·높이·읽던 위치        | `reader`, `reader-height`, `page-effects`, `paragraph-spacing`, `session-restore` |
 | 설정창·프리셋·파일·글꼴      | `ui-finishing`, `preset-loading`, `management`, `user-fonts`, `navigation-fonts`  |
 | 초기 표시·이미지·보조 영역   | `initial-display`, `background-images`, `reading-polish`, `finishing`             |
-| 릴리스·버전·스토어 제출 분기 | `npm run test:release`, `npm run release:check`                                   |
+| 릴리스·버전·스토어 제출 분기 | `pnpm run test:release`, `pnpm run release:check`                                 |
 
-표의 브라우저 검사 이름은 `tests/e2e`의 `.spec.ts` 파일명입니다. 특정 파일만 실행할 때도 먼저 `npm run build:e2e`로 현재 소스를 반영합니다. `--list`는 등록 확인이며 실제 실행이 아닙니다. 부분 검사와 전체 검사를 구분해 기록하세요.
+표의 브라우저 검사 이름은 `tests/e2e`의 `.spec.ts` 파일명입니다. 특정 파일만 실행할 때도 먼저 `pnpm run build:e2e`로 현재 소스를 반영합니다. `--list`는 등록 확인이며 실제 실행이 아닙니다. 부분 검사와 전체 검사를 구분해 기록하세요.
 
 일반 회귀 결과는 `test-results/`에, 실제 사이트 검사 결과는 `_reference/live/`에 남습니다. 실제 사이트 결과에는 작품 내용이나 네트워크 헤더가 포함될 수 있으므로 공개 CI 산출물로 올리지 않습니다.
 
@@ -89,14 +94,20 @@ CI는 Linux에서 정적 검사·단위 검사·일반 빌드를, Windows에서 
 
 ## 배포
 
-작업 PR은 `develop`으로, 릴리스 PR은 같은 저장소의 `develop`에서 `main`으로 보냅니다. 릴리스 PR에서 `package.json`·lockfile의 버전과 [변경 이력](../CHANGELOG.md)을 함께 갱신합니다. 자세한 협업 규칙은 [기여 안내](../CONTRIBUTING.md)에 있습니다.
+작업 PR은 `develop`으로, 릴리스 PR은 같은 저장소의 `develop`에서 `main`으로 보냅니다. 릴리스 PR에서 `package.json`의 버전과 [변경 이력](../CHANGELOG.md)을 함께 갱신합니다. pnpm 잠금 파일은 프로젝트 버전을 저장하지 않습니다. 의존성을 바꾸면 잠금 파일도 갱신하며, 릴리스 검사는 루트 의존성과 잠금 파일의 일치를 확인합니다. 자세한 협업 규칙은 [기여 안내](../CONTRIBUTING.md)에 있습니다.
 
 배포 파이프라인은 검증한 동일 ZIP을 GitHub Release와 스토어 제출에 사용합니다. Chrome 웹 스토어 자동 제출은 최초 등록 준비가 끝날 때까지 비활성 상태로 둡니다. 활성화 이후에도 Google 심사 승인과 사용자 브라우저 업데이트 시점은 별개입니다. 배포 인증 값은 저장소에 커밋하지 않습니다.
 
-`release:package`가 만드는 `.output/release/`의 ZIP·SHA256SUMS·메타데이터를 제출 기준으로 사용합니다. 일반 `npm run zip` 결과와 혼동하지 마세요. 활성화 조건, 필요한 변수와 실패 후 재실행은 [배포 운영](RELEASE.md)을 따릅니다.
+`release:package`가 만드는 `.output/release/`의 ZIP·SHA256SUMS·메타데이터를 제출 기준으로 사용합니다. 일반 `pnpm run zip` 결과와 혼동하지 마세요. 활성화 조건, 필요한 변수와 실패 후 재실행은 [배포 운영](RELEASE.md)을 따릅니다.
 
 ## 아이콘과 라이선스
 
-아이콘을 바꾸면 원본과 생성 스크립트를 함께 유지하고 `npm run icons:generate`로 필요한 크기를 생성합니다. 원본 작업 파일은 확장 ZIP에 넣지 않습니다.
+아이콘을 바꾸면 원본과 생성 스크립트를 함께 유지하고 `pnpm run icons:generate`로 필요한 크기를 생성합니다. 원본 작업 파일은 확장 ZIP에 넣지 않습니다.
 
 새 라이브러리나 글꼴을 추가할 때 출처·버전·사용 조건을 확인하고 배포 고지에 반영합니다. UI 동봉 글꼴과 원격 독서용 글꼴, 사용자가 등록한 파일은 배포 범위가 다릅니다. 사용자 등록 파일이나 권한 없는 작품 원문을 테스트 fixture로 커밋하지 않습니다.
+
+## 성능 비교
+
+`pnpm run build:e2e` 후 `node scripts/measure-ui.mjs`를 실행하면 `test-results/performance/`에 합성 MV3 측정 결과와 화면을 저장합니다. 옵션 홈·팝업·뷰어를 새 프로필 5개에서 열어 표시 시점, 글꼴 준비 후 시점, JavaScript 실행 시간과 힙 크기를 기록합니다. 같은 머신과 Chromium, 다른 무거운 검사 없이 변경 전후 중앙값을 비교하세요. 외부 요청은 차단하므로 실제 CDN 속도나 사용자 이미지의 최악 조건을 나타내지는 않습니다.
+
+라우팅·모션·상태 구독을 바꾸면 `management`, `navigation-fonts`, `page-effects` 검사와 전체 MV3 회귀를 확인합니다. CSS 애니메이션 이름 대신 실제 움직임·포커스·취소·스타일 복원을 검사합니다. 시작 지연 청크에 무거운 설정 UI를 추가하거나 동작 줄이기에서도 반복 모션이 남지 않도록 합니다.

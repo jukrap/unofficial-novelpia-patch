@@ -1,5 +1,8 @@
+import { MotionButton } from '@/shared/ui/motion-button';
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Icon } from './icon';
+import { AnimatePresence, m, useIsPresent, useReducedMotion } from 'motion/react';
+import { motionDuration } from '@/shared/config/motion';
 
 interface ToastNotice {
   id: number;
@@ -7,6 +10,8 @@ interface ToastNotice {
 }
 
 function ActionToast({ message, onDismiss }: { message: string; onDismiss: () => void }) {
+  const present = useIsPresent();
+  const reduced = useReducedMotion();
   const element = useRef<HTMLDivElement>(null);
   const remaining = useRef(4000);
   const [hovered, setHovered] = useState(false);
@@ -20,16 +25,22 @@ function ActionToast({ message, onDismiss }: { message: string; onDismiss: () =>
     };
   }, []);
   useEffect(() => {
-    if (paused) return;
+    if (paused || !present) return;
     const started = performance.now();
     const timer = setTimeout(onDismiss, remaining.current);
     return () => {
       clearTimeout(timer);
       remaining.current = Math.max(0, remaining.current - (performance.now() - started));
     };
-  }, [paused, onDismiss]);
+  }, [paused, present, onDismiss]);
   return (
-    <div
+    <m.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: reduced ? 0 : motionDuration.popover }}
+      inert={!present}
+      aria-hidden={!present || undefined}
       ref={element}
       popover="manual"
       className="action-toast"
@@ -43,10 +54,15 @@ function ActionToast({ message, onDismiss }: { message: string; onDismiss: () =>
       <span role="status" aria-live="polite" aria-atomic="true">
         {message}
       </span>
-      <button type="button" className="icon-button" aria-label="알림 닫기" onClick={onDismiss}>
+      <MotionButton
+        type="button"
+        className="icon-button"
+        aria-label="알림 닫기"
+        onClick={onDismiss}
+      >
         <Icon name="close" />
-      </button>
-    </div>
+      </MotionButton>
+    </m.div>
   );
 }
 
@@ -59,8 +75,12 @@ export function useToast(): { notify: (message: string) => void; toast: ReactNod
   const dismiss = useCallback(() => setNotice(null), []);
   return {
     notify,
-    toast: notice ? (
-      <ActionToast key={notice.id} message={notice.message} onDismiss={dismiss} />
-    ) : null,
+    toast: (
+      <AnimatePresence>
+        {notice ? (
+          <ActionToast key={notice.id} message={notice.message} onDismiss={dismiss} />
+        ) : null}
+      </AnimatePresence>
+    ),
   };
 }

@@ -33,23 +33,26 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        with:
+          run_install: false
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version-file: .nvmrc
-          cache: npm
+          cache: pnpm
           package-manager-cache: false
-      - run: npm ci
-      - run: npm run type-check
-      - run: npm run lint
-      - run: npm run format:check
-      - run: npm run test:unit
-      - run: npm run test:release
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run type-check
+      - run: pnpm run lint
+      - run: pnpm run format:check
+      - run: pnpm run test:unit
+      - run: pnpm run test:release
       - name: Validate release metadata and version increase
-        run: npm run release:check
+        run: pnpm run release:check
         env:
           RELEASE_BASE_SHA: ${{ github.event.pull_request.base.ref == 'main' && github.event.pull_request.base.sha || (github.event_name == 'push' && github.ref == 'refs/heads/main' && github.event.before) || '' }}
-      - run: npm run build
-      - run: npm run release:package
+      - run: pnpm run build
+      - run: pnpm run release:package
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: release-package
@@ -68,14 +71,17 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        with:
+          run_install: false
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version-file: .nvmrc
-          cache: npm
+          cache: pnpm
           package-manager-cache: false
-      - run: npm ci
-      - run: npx playwright install chromium
-      - run: npm run test:e2e
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install chromium
+      - run: pnpm run test:e2e
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: failure()
         with:
@@ -143,7 +149,7 @@ jobs:
           token_format: access_token
           access_token_scopes: https://www.googleapis.com/auth/chromewebstore
           create_credentials_file: false
-      - run: npm run cws:submit
+      - run: node scripts/cws-release.mjs submit
         env:
           CWS_SUBMIT_ENABLED: ${{ vars.CWS_SUBMIT_ENABLED }}
           CWS_PUBLISHER_ID: ${{ vars.CWS_PUBLISHER_ID }}
@@ -177,7 +183,7 @@ jobs:
           token_format: access_token
           access_token_scopes: https://www.googleapis.com/auth/chromewebstore.readonly
           create_credentials_file: false
-      - run: npm run cws:status
+      - run: node scripts/cws-release.mjs status
         env:
           CWS_PUBLISHER_ID: ${{ vars.CWS_PUBLISHER_ID }}
           CWS_EXTENSION_ID: ${{ vars.CWS_EXTENSION_ID }}

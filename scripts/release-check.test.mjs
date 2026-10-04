@@ -1,15 +1,37 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { inflateRawSync } from 'node:zlib';
+import { mkdtemp, writeFile, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { createZip } from './release-archive.mjs';
-import { compareVersions, validatePullRequest, validateRelease } from './release-check.mjs';
+import {
+  compareVersions,
+  readLockfile,
+  validatePullRequest,
+  validateRelease,
+} from './release-check.mjs';
 import { validatePackage } from './release-package.mjs';
 
 function release(version = '0.2.0') {
-  const pkg = { name: 'unofficial-novelpia-patch', version };
+  const pkg = {
+    name: 'unofficial-novelpia-patch',
+    version,
+    packageManager: 'pnpm@12.9.1',
+    dependencies: { react: '19.3.0' },
+  };
   return {
     pkg,
-    lock: { ...pkg, packages: { '': pkg } },
+    lock: {
+      lockfileVersion: '9.0',
+      importers: {
+        '.': {
+          dependencies: {
+            react: { specifier: '19.3.0', version: '19.3.0' },
+          },
+        },
+      },
+    },
     changelog: `# 변경 이력\n\n## [${version}] - 2026-10-04\n\n- 읽기 환경을 개선했습니다.\n`,
     baseVersion: '0.1.0',
   };
@@ -22,8 +44,30 @@ test('release versions compare numerically and require a matching lockfile and n
   assert.throws(() => validateRelease(release('0.1.0-beta')), /x.y.z/);
   assert.throws(() => validateRelease({ ...release(), changelog: '# 변경 이력' }), /CHANGELOG/);
   const mismatch = release();
-  mismatch.lock = { ...mismatch.lock, version: '9.0.0' };
-  assert.throws(() => validateRelease(mismatch), /package-lock/);
+  mismatch.lock.importers['.'].dependencies.react.specifier = '18.0.0';
+  assert.throws(() => validateRelease(mismatch), /pnpm-lock/);
+  const extra = release();
+  extra.lock.importers['.'].dependencies.unexpected = { specifier: '1.0.0' };
+  assert.throws(() => validateRelease(extra), /pnpm-lock/);
+  const missing = release();
+  delete missing.lock.importers['.'];
+  assert.throws(() => validateRelease(missing), /루트 의존성/);
+});
+
+test('pnpm package manager metadata does not replace the application lock document', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'unp-lock-'));
+  try {
+    await writeFile(
+      join(root, 'pnpm-lock.yaml'),
+      '---\nlockfileVersion: "9.0"\nimporters: { .: { packageManagerDependencies: {} } }\n---\nlockfileVersion: "9.0"\nsettings: {}\nimporters: { .: { dependencies: { react: { specifier: "19.3.0" } } } }\n'
+    );
+    assert.equal(
+      validateRelease({ ...release(), lock: await readLockfile(root) }).version,
+      '0.2.0'
+    );
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
 });
 
 test('only the same repository develop PR may target main', () => {
