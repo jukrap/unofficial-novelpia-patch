@@ -93,7 +93,8 @@ try {
       }
     } finally {
       await context?.close();
-      await rm(profile, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
+      if (resolve(profile).startsWith(join(tmpdir(), 'unp-measure-')))
+        await rm(profile, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
     }
   }
 } finally {

@@ -3,3 +3,5 @@ allowBuilds:
   fsevents: false
 strictDepBuilds: true
 saveExact: true
+# Match Windows paths so source-region comments and chunk hashes are reproducible.
+virtualStoreDirMaxLength: 60

@@ -4,6 +4,8 @@
 
 Node.js 26.10 이상, pnpm 12.9.1, Git을 사용합니다. `.nvmrc`는 검증한 Node.js 26.10.0을 지정하며 CI도 이 파일을 사용합니다. 의존성은 `pnpm-lock.yaml`으로 고정합니다. Node 버전을 바꾼 뒤에는 `pnpm install --frozen-lockfile`로 다시 설치하세요.
 
+`pnpm-workspace.yaml`은 의존성 경로 길이 기준도 Windows와 Linux에서 같게 고정합니다. 번들의 소스 구역 주석에 설치 경로가 반영되므로, 이 설정은 운영체제에 따른 청크 해시 차이를 줄이는 데 필요합니다.
+
 `@types/node`는 개발·검증에 사용하는 Node의 주요 버전과 맞춥니다. 주요 버전을 올릴 때는 `.nvmrc`·`engines`·문서를 함께 갱신하고 설치·타입·테스트·빌드 및 MV3 실행을 확인합니다. 개발용 Node 버전 변경이 확장 사용자에게 Node 설치를 요구하는 것은 아닙니다.
 
 Linux에서 공식 Node 바이너리를 쓰려면 `libatomic` 런타임이 필요합니다. Ubuntu·Debian의 패키지 이름은 `libatomic1`이며, `libatomic.so.1` 로딩 오류가 나면 이 시스템 의존성을 확인하세요. [Node의 실행 환경 요구사항](https://github.com/nodejs/node/blob/v26.10.0/BUILDING.md#official-binary-platforms-and-toolchains)을 따릅니다.
@@ -90,7 +92,7 @@ CI는 Linux에서 정적 검사·단위 검사·일반 빌드를, Windows에서 
 
 ## 배포
 
-작업 PR은 `develop`으로, 릴리스 PR은 같은 저장소의 `develop`에서 `main`으로 보냅니다. 릴리스 PR에서 `package.json`·lockfile의 버전과 [변경 이력](../CHANGELOG.md)을 함께 갱신합니다. 자세한 협업 규칙은 [기여 안내](../CONTRIBUTING.md)에 있습니다.
+작업 PR은 `develop`으로, 릴리스 PR은 같은 저장소의 `develop`에서 `main`으로 보냅니다. 릴리스 PR에서 `package.json`의 버전과 [변경 이력](../CHANGELOG.md)을 함께 갱신합니다. pnpm 잠금 파일은 프로젝트 버전을 저장하지 않습니다. 의존성을 바꾸면 잠금 파일도 갱신하며, 릴리스 검사는 루트 의존성과 잠금 파일의 일치를 확인합니다. 자세한 협업 규칙은 [기여 안내](../CONTRIBUTING.md)에 있습니다.
 
 배포 파이프라인은 검증한 동일 ZIP을 GitHub Release와 스토어 제출에 사용합니다. Chrome 웹 스토어 자동 제출은 최초 등록 준비가 끝날 때까지 비활성 상태로 둡니다. 활성화 이후에도 Google 심사 승인과 사용자 브라우저 업데이트 시점은 별개입니다. 배포 인증 값은 저장소에 커밋하지 않습니다.
 
@@ -101,3 +103,9 @@ CI는 Linux에서 정적 검사·단위 검사·일반 빌드를, Windows에서 
 아이콘을 바꾸면 원본과 생성 스크립트를 함께 유지하고 `pnpm run icons:generate`로 필요한 크기를 생성합니다. 원본 작업 파일은 확장 ZIP에 넣지 않습니다.
 
 새 라이브러리나 글꼴을 추가할 때 출처·버전·사용 조건을 확인하고 배포 고지에 반영합니다. UI 동봉 글꼴과 원격 독서용 글꼴, 사용자가 등록한 파일은 배포 범위가 다릅니다. 사용자 등록 파일이나 권한 없는 작품 원문을 테스트 fixture로 커밋하지 않습니다.
+
+## 성능 비교
+
+`pnpm run build:e2e` 후 `node scripts/measure-ui.mjs`를 실행하면 `test-results/performance/`에 합성 MV3 측정 결과와 화면을 저장합니다. 옵션 홈·팝업·뷰어를 새 프로필 5개에서 열어 표시 시점, 글꼴 준비 후 시점, JavaScript 실행 시간과 힙 크기를 기록합니다. 같은 머신과 Chromium, 다른 무거운 검사 없이 변경 전후 중앙값을 비교하세요. 외부 요청은 차단하므로 실제 CDN 속도나 사용자 이미지의 최악 조건을 나타내지는 않습니다.
+
+라우팅·모션·상태 구독을 바꾸면 `management`, `navigation-fonts`, `page-effects` 검사와 전체 MV3 회귀를 확인합니다. CSS 애니메이션 이름 대신 실제 움직임·포커스·취소·스타일 복원을 검사합니다. 시작 지연 청크에 무거운 설정 UI를 추가하거나 동작 줄이기에서도 반복 모션이 남지 않도록 합니다.
