@@ -1,3 +1,4 @@
+import { MotionButton } from '@/shared/ui/motion-button';
 import { useEffect, useRef, useState } from 'react';
 import { defaults } from '@/entities/settings';
 import type { Preset } from '@/shared/model/preferences';
@@ -79,7 +80,7 @@ export function PresetCard({
         </div>
       </dl>
       <div className="preset-card-actions">
-        <button
+        <MotionButton
           type="button"
           className="primary"
           disabled={busy || current}
@@ -87,20 +88,25 @@ export function PresetCard({
           onClick={onApply}
         >
           적용
-        </button>
+        </MotionButton>
         {onEdit ? (
-          <button type="button" disabled={busy} aria-label={`${preset.name} 편집`} onClick={onEdit}>
+          <MotionButton
+            type="button"
+            disabled={busy}
+            aria-label={`${preset.name} 편집`}
+            onClick={onEdit}
+          >
             편집
-          </button>
+          </MotionButton>
         ) : null}
-        <button
+        <MotionButton
           type="button"
           disabled={busy}
           aria-label={`${preset.name} ${preset.isDefault ? '복제하여 편집' : '복제'}`}
           onClick={onDuplicate}
         >
           {preset.isDefault ? '복제하여 편집' : '복제'}
-        </button>
+        </MotionButton>
       </div>
     </article>
   );

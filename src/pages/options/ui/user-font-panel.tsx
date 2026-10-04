@@ -1,3 +1,5 @@
+import { AnimatePresence } from 'motion/react';
+import { MotionButton } from '@/shared/ui/motion-button';
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import {
   getUserFonts,
@@ -126,14 +128,14 @@ export default function UserFontPanel({ onNotify }: OptionsScreenProps) {
           <p>여러 두께의 파일을 함께 선택하세요. 같은 글꼴은 하나로 묶입니다.</p>
           <small>TTF, OTF, WOFF, WOFF2, 파일당 20MiB, 보관함 100MiB</small>
         </div>
-        <button
+        <MotionButton
           type="button"
           className="primary"
           disabled={!!busy || !ready}
           onClick={() => input.current?.click()}
         >
           파일 선택
-        </button>
+        </MotionButton>
         <input
           ref={input}
           type="file"
@@ -152,7 +154,7 @@ export default function UserFontPanel({ onNotify }: OptionsScreenProps) {
         <div className="message error" role="alert">
           <p>{error}</p>
           {!ready ? (
-            <button
+            <MotionButton
               type="button"
               onClick={() => {
                 setError('');
@@ -160,7 +162,7 @@ export default function UserFontPanel({ onNotify }: OptionsScreenProps) {
               }}
             >
               다시 시도
-            </button>
+            </MotionButton>
           ) : null}
         </div>
       ) : null}
@@ -195,7 +197,7 @@ export default function UserFontPanel({ onNotify }: OptionsScreenProps) {
                       <small>{sizeLabel(face.size)}</small>
                     </span>
                     <span className="font-weight-tag">{weightLabel(face)}</span>
-                    <button
+                    <MotionButton
                       type="button"
                       aria-label={`${face.fileName} 제외`}
                       onClick={() =>
@@ -209,14 +211,14 @@ export default function UserFontPanel({ onNotify }: OptionsScreenProps) {
                       }
                     >
                       제외
-                    </button>
+                    </MotionButton>
                   </li>
                 ))}
               </ul>
               {!draft.faces.length ? (
                 <p className="hint">파일을 추가하거나 이 글꼴을 목록에서 제외하세요.</p>
               ) : null}
-              <button
+              <MotionButton
                 type="button"
                 className="quiet"
                 onClick={() =>
@@ -224,14 +226,14 @@ export default function UserFontPanel({ onNotify }: OptionsScreenProps) {
                 }
               >
                 이 글꼴 제외
-              </button>
+              </MotionButton>
             </fieldset>
           ))}
           <div className="font-library-actions">
-            <button type="button" disabled={!!busy} onClick={discard}>
+            <MotionButton type="button" disabled={!!busy} onClick={discard}>
               취소
-            </button>
-            <button
+            </MotionButton>
+            <MotionButton
               type="button"
               className="primary"
               disabled={
@@ -240,7 +242,7 @@ export default function UserFontPanel({ onNotify }: OptionsScreenProps) {
               onClick={() => void save()}
             >
               {busy === '글꼴을 저장하는 중' ? '저장 중…' : '글꼴 저장'}
-            </button>
+            </MotionButton>
           </div>
         </div>
       ) : null}
@@ -248,13 +250,13 @@ export default function UserFontPanel({ onNotify }: OptionsScreenProps) {
         <h2>
           등록한 글꼴 <small>{fonts.length}</small>
         </h2>
-        <button
+        <MotionButton
           type="button"
           disabled={!!busy}
           onClick={() => void refreshUserFonts().catch((cause: unknown) => setError(String(cause)))}
         >
           목록 새로고침
-        </button>
+        </MotionButton>
       </div>
       {!fonts.length && ready ? (
         <p className="hint">
@@ -266,20 +268,20 @@ export default function UserFontPanel({ onNotify }: OptionsScreenProps) {
           <div className="registered-font-heading">
             <h3>{font.displayName}</h3>
             <div>
-              <button
+              <MotionButton
                 type="button"
                 disabled={!!busy || drafts.some((draft) => draft.id === font.id)}
                 onClick={() => setDrafts((current) => [...current, editFont(font)])}
               >
                 수정
-              </button>
-              <button
+              </MotionButton>
+              <MotionButton
                 type="button"
                 disabled={!!busy || !!drafts.length}
                 onClick={() => setConfirming(font.id)}
               >
                 삭제
-              </button>
+              </MotionButton>
             </div>
           </div>
           <UserFontPreview font={font} loader={loader} />
@@ -297,56 +299,58 @@ export default function UserFontPanel({ onNotify }: OptionsScreenProps) {
         글꼴 파일은 이 브라우저에만 보관하며 설정 파일에 포함되지 않습니다. 다른 브라우저에서는 같은
         글꼴 파일을 다시 등록하세요. 설정 초기화로 삭제되지 않습니다.
       </p>
-      {confirming ? (
-        <Modal
-          title={confirming === 'discard' ? '글꼴 변경 취소' : '글꼴 삭제'}
-          onClose={() => {
-            if (!busy) setConfirming(null);
-          }}
-        >
-          <p>
-            {confirming === 'discard'
-              ? '저장하지 않은 글꼴 변경을 버릴까요?'
-              : `‘${fonts.find((font) => font.id === confirming)?.displayName ?? '선택한 글꼴'}’ 파일을 이 브라우저에서 삭제할까요?`}
-          </p>
-          <div className="button-row">
-            <button type="button" disabled={!!busy} onClick={() => setConfirming(null)}>
-              돌아가기
-            </button>
-            <button
-              type="button"
-              className="primary"
-              disabled={!!busy}
-              onClick={() => {
-                if (confirming === 'discard') {
-                  setDrafts([]);
+      <AnimatePresence>
+        {confirming ? (
+          <Modal
+            title={confirming === 'discard' ? '글꼴 변경 취소' : '글꼴 삭제'}
+            onClose={() => {
+              if (!busy) setConfirming(null);
+            }}
+          >
+            <p>
+              {confirming === 'discard'
+                ? '저장하지 않은 글꼴 변경을 버릴까요?'
+                : `‘${fonts.find((font) => font.id === confirming)?.displayName ?? '선택한 글꼴'}’ 파일을 이 브라우저에서 삭제할까요?`}
+            </p>
+            <div className="button-row">
+              <MotionButton type="button" disabled={!!busy} onClick={() => setConfirming(null)}>
+                돌아가기
+              </MotionButton>
+              <MotionButton
+                type="button"
+                className="primary"
+                disabled={!!busy}
+                onClick={() => {
+                  if (confirming === 'discard') {
+                    setDrafts([]);
+                    setError('');
+                    setConfirming(null);
+                    return;
+                  }
+                  const font = fonts.find((item) => item.id === confirming);
+                  if (!font) return setConfirming(null);
+                  setBusy('글꼴을 삭제하는 중');
                   setError('');
-                  setConfirming(null);
-                  return;
-                }
-                const font = fonts.find((item) => item.id === confirming);
-                if (!font) return setConfirming(null);
-                setBusy('글꼴을 삭제하는 중');
-                setError('');
-                void removeUserFont(font.id, font.revision)
-                  .then(
-                    () => {
-                      onNotify('글꼴을 삭제했습니다.');
-                      setConfirming(null);
-                    },
-                    (cause: unknown) => {
-                      setError(cause instanceof Error ? cause.message : String(cause));
-                      setConfirming(null);
-                    }
-                  )
-                  .finally(() => setBusy(''));
-              }}
-            >
-              {confirming === 'discard' ? '변경 버리기' : busy ? '삭제 중…' : '삭제'}
-            </button>
-          </div>
-        </Modal>
-      ) : null}
+                  void removeUserFont(font.id, font.revision)
+                    .then(
+                      () => {
+                        onNotify('글꼴을 삭제했습니다.');
+                        setConfirming(null);
+                      },
+                      (cause: unknown) => {
+                        setError(cause instanceof Error ? cause.message : String(cause));
+                        setConfirming(null);
+                      }
+                    )
+                    .finally(() => setBusy(''));
+                }}
+              >
+                {confirming === 'discard' ? '변경 버리기' : busy ? '삭제 중…' : '삭제'}
+              </MotionButton>
+            </div>
+          </Modal>
+        ) : null}
+      </AnimatePresence>
     </section>
   );
 }

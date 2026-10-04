@@ -1,3 +1,4 @@
+import { animateBook } from '@/shared/lib/loading-motion';
 import type { Root } from 'react-dom/client';
 import { SettingsStore } from '@/entities/settings';
 import { PresetStore } from '@/entities/preset';
@@ -21,7 +22,7 @@ import { EpisodeListTheme, nativeModeEntry, reloadNotice } from '../ui/viewer-su
 import { trackReadingStatistics } from './reading-statistics';
 import type { ViewerPreparation } from './bootstrap';
 import { FirstDisplay } from './first-display';
-import { installUiFonts } from '@/shared/platform/ui-fonts';
+import { installUiFonts, loadUiFonts } from '@/shared/platform/ui-fonts';
 import { initializeUserFonts, subscribeFonts } from '@/shared/platform/user-fonts';
 
 export function startViewer(isContextValid = hasExtensionContext, preparation?: ViewerPreparation) {
@@ -54,6 +55,7 @@ export function startViewer(isContextValid = hasExtensionContext, preparation?: 
   let engine: ReaderEngine | null = null;
   let root: Root | null = null;
   let host: HTMLElement | null = null;
+  let clearPanelLoading = () => {};
   let state: NativeState | undefined;
   let observer: MutationObserver;
   let frame = 0;
@@ -138,20 +140,24 @@ export function startViewer(isContextValid = hasExtensionContext, preparation?: 
   const resumePosition = (current: ReaderEngine, ...preferred: (ReadingAnchor | null)[]) => {
     const ticket = current.beginResume();
     const episode = current.roots.episodeId;
-    return storage.local.get(positionKey(episode)).then(
-      (raw) => {
-        if (disposed || current !== engine) return;
-        current.completeResume(
-          ticket,
-          resumeAnchor(episode, ...preferred, raw[positionKey(episode)])
-        );
-      },
-      () => {
-        if (disposed || current !== engine) return;
-        // Do not replace an unread saved position with a startup layout after a failed read.
-        current.completeResume(ticket, resumeAnchor(episode, ...preferred), false);
-      }
-    );
+    return new Promise<void>((resolve) => {
+      let finished = false;
+      const finish = (raw: unknown, succeeded: boolean) => {
+        if (finished) return;
+        finished = true;
+        clearTimeout(timer);
+        if (!disposed && current === engine)
+          current.completeResume(ticket, resumeAnchor(episode, ...preferred, raw), succeeded);
+        resolve();
+      };
+      // A failed/stalled read must not replace the saved anchor, or jump later
+      // after a fallback was already shown to the reader.
+      const timer = setTimeout(() => finish(null, false), 5000);
+      void storage.local.get(positionKey(episode)).then(
+        (raw) => finish(raw[positionKey(episode)], true),
+        () => finish(null, false)
+      );
+    });
   };
   const onNative = async (option: NativeOption, value: boolean | 'scroll' | 'page') => {
     if (option === 'mode') await resumeReady;
@@ -302,6 +308,7 @@ export function startViewer(isContextValid = hasExtensionContext, preparation?: 
     mountEntry();
     const container = document.querySelector<HTMLElement>('#theme_box');
     if (!container || host?.isConnected || getComputedStyle(container).display === 'none') return;
+    clearPanelLoading();
     root?.unmount();
     host?.remove();
     panelLedger.restore();
@@ -348,7 +355,7 @@ export function startViewer(isContextValid = hasExtensionContext, preparation?: 
     const shadow = host.attachShadow({ mode: 'open' });
     const style = document.createElement('style');
     const pendingDark = settings.getSnapshot().settings.darkMode;
-    style.textContent = `:host{display:block;border-radius:10px;color:${pendingDark ? '#eeeaf4' : '#3b304c'};background:${pendingDark ? '#24212b' : '#faf8fd'};font:14px var(--unp-ui-font, "UNP UI Freesentation", system-ui)}.panel-pending{padding:32px;text-align:center;opacity:0;animation:unp-ready 0s 150ms forwards}.panel-pending svg{display:block;margin:0 auto 12px;color:#8463f5;animation:unp-book 850ms ease-in-out infinite alternate}.panel-pending button{margin-left:12px}@keyframes unp-ready{to{opacity:1}}@keyframes unp-book{to{opacity:.5;transform:translateY(-2px)}}@media(prefers-reduced-motion:reduce){.panel-pending svg{animation:none}}`;
+    style.textContent = `:host{display:block;border-radius:10px;color:${pendingDark ? '#eeeaf4' : '#3b304c'};background:${pendingDark ? '#24212b' : '#faf8fd'};font:14px var(--unp-ui-font, "UNP UI Freesentation", system-ui)}.panel-pending{padding:32px;text-align:center;opacity:0}.panel-pending svg{display:block;margin:0 auto 12px;color:#8463f5}.panel-pending button{margin-left:12px}`;
     const mount = document.createElement('div');
     shadow.append(style, mount);
     container.append(host);
@@ -358,6 +365,16 @@ export function startViewer(isContextValid = hasExtensionContext, preparation?: 
     mount.setAttribute('role', 'status');
     mount.innerHTML =
       '<svg width="28" height="24" viewBox="0 0 28 24" aria-hidden="true"><path d="M14 5C10 2 5 2 2 4v16c4-2 8-2 12 1 4-3 8-3 12-1V4c-4-2-8-2-12 1Zm0 0v16" fill="none" stroke="currentColor" stroke-width="1.7"/></svg>테마박스를 준비하고 있습니다…';
+    let pendingMotion: ReturnType<typeof animateBook> | undefined;
+    const pendingTimer = setTimeout(() => {
+      mount.style.opacity = '1';
+      pendingMotion = animateBook(mount.querySelector('svg')!);
+    }, 150);
+    clearPanelLoading = () => {
+      clearTimeout(pendingTimer);
+      pendingMotion?.cancel();
+      mount.style.removeProperty('opacity');
+    };
     const expected = host;
     const load = () => {
       panelPromise ??= Promise.all([import('../ui/panel-runtime'), presets.initialize()]).then(
@@ -368,6 +385,7 @@ export function startViewer(isContextValid = hasExtensionContext, preparation?: 
       void panelPromise
         .then(() => {
           if (disposed || host !== expected || !panelUi) return;
+          clearPanelLoading();
           style.textContent = panelUi.panelStyles;
           mount.removeAttribute('class');
           mount.removeAttribute('role');
@@ -379,6 +397,8 @@ export function startViewer(isContextValid = hasExtensionContext, preparation?: 
           if (disposed || host !== expected) return;
           console.error('[UNP] Themebox load failed', error);
           panelPromise = undefined;
+          clearPanelLoading();
+          mount.style.opacity = '1';
           mount.textContent = '테마박스를 불러오지 못했습니다.';
           const retry = document.createElement('button');
           retry.textContent = '다시 시도';
@@ -463,8 +483,8 @@ export function startViewer(isContextValid = hasExtensionContext, preparation?: 
       return;
     }
     if (!navigationUi) {
-      navigationPromise ??= import('../ui/navigation-runtime')
-        .then((ui) => {
+      navigationPromise ??= Promise.all([import('../ui/navigation-runtime'), loadUiFonts()])
+        .then(([ui]) => {
           navigationUi = ui;
           if (!disposed) schedule();
         })
@@ -592,22 +612,29 @@ export function startViewer(isContextValid = hasExtensionContext, preparation?: 
       /* A damaged one-time position must not prevent opening the reader. */
     }
     resumeReady = resumePosition(current, priorPosition, modePosition);
-    firstDisplay.attach(current, resumeReady);
     current.refreshServiceRegion();
-    void native
+    const chromeReady = native
       .request({ type: 'read' })
-      .then((value) => {
-        if (!disposed) {
+      .then(async (value) => {
+        if (!disposed && engine === current) {
           state = value;
           if (settings.getSnapshot().needsEffectMigration)
             settings.update({ pageEffect: value.animation ? 'fade' : 'none' });
           engine?.setAnimation(value.animation);
           syncDark();
+          await darkSync;
+          if (disposed || engine !== current) return;
           render();
           mountNavigation();
+          await navigationPromise;
+          if (!disposed && engine === current) mountNavigation();
         }
       })
       .catch(() => {});
+    firstDisplay.attach(
+      current,
+      Promise.all([resumeReady, chromeReady]).then(() => {})
+    );
     render();
     mountNavigation();
   };
@@ -743,6 +770,7 @@ export function startViewer(isContextValid = hasExtensionContext, preparation?: 
     removeNativeEntry();
     notice?.remove();
     removeNavigation();
+    clearPanelLoading();
     root?.unmount();
     host?.remove();
     panelLedger.restore();

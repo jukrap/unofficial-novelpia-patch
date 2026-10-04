@@ -11,7 +11,7 @@ const output = path.join(root, 'store/assets');
 const extension = path.join(root, '.output/chrome-mv3-e2e');
 const manifest = JSON.parse(await readFile(path.join(extension, 'manifest.json'), 'utf8'));
 if (!manifest.content_scripts?.some((script) => script.matches.includes('http://127.0.0.1/*')))
-  throw new Error('Run npm run build:e2e before capturing synthetic store screenshots.');
+  throw new Error('Run pnpm run build:e2e before capturing synthetic store screenshots.');
 await mkdir(output, { recursive: true });
 
 // Original sample prose written for these screenshots. No novel is downloaded.
@@ -179,7 +179,7 @@ try {
   }
   await writeFile(
     path.join(output, 'README.md'),
-    `# 스토어 등록 이미지\n\n버전 ${manifest.version}의 실제 확장을 격리된 MV3 Chromium에서 촬영했습니다.\n\n- \`01-reading-settings.png\`: 스크롤 읽기에서 연 테마박스, 1280×800\n- \`02-two-page-reading.png\`: 두 쪽 페이지 읽기와 진행바, 1280×800\n- \`03-presets.png\`: 설정 페이지의 실제 프리셋 갤러리, 1280×800\n- \`promo-440x280.png\`: 배포 아이콘과 동봉 글꼴로 조합한 홍보 이미지, 440×280\n\n세 기능 화면은 합성 본문과 서비스 UI fixture에 확장을 실행한 화면입니다. 노벨피아 작품·계정 정보·실제 광고를 수집하지 않았습니다. 본문은 촬영용으로 작성했으며 원사이트 디자인을 정확히 재현한 화면은 아닙니다. 홍보 이미지를 제외한 기능 화면에는 합성된 UI나 사후 보정을 넣지 않았습니다.\n\n## 다시 만들기\n\n프로젝트 의존성과 Playwright Chromium 설치 후 저장소 루트에서 실행합니다.\n\n\`\`\`sh\nnpm run build:e2e\nnode scripts/store-assets.mjs\n\`\`\`\n\n결과는 이 디렉터리에만 저장합니다. 브라우저 프로필은 임시 폴더에 만들고 종료 시 삭제합니다. UI 글꼴은 확장에 동봉된 파일을 사용하며, 프리셋의 독서용 웹글꼴은 앱의 실제 로더가 요청합니다. 네트워크 실패 시 대체 글꼴이 보일 수 있으므로 생성 후 화면을 확인해야 합니다. 이 자료는 심사 제출이나 승인을 의미하지 않습니다.\n`,
+    `# 스토어 등록 이미지\n\n버전 ${manifest.version}의 실제 확장을 격리된 MV3 Chromium에서 촬영했습니다.\n\n- \`01-reading-settings.png\`: 스크롤 읽기에서 연 테마박스, 1280×800\n- \`02-two-page-reading.png\`: 두 쪽 페이지 읽기와 진행바, 1280×800\n- \`03-presets.png\`: 설정 페이지의 실제 프리셋 갤러리, 1280×800\n- \`promo-440x280.png\`: 배포 아이콘과 동봉 글꼴로 조합한 홍보 이미지, 440×280\n\n세 기능 화면은 합성 본문과 서비스 UI fixture에 확장을 실행한 화면입니다. 노벨피아 작품·계정 정보·실제 광고를 수집하지 않았습니다. 본문은 촬영용으로 작성했으며 원사이트 디자인을 정확히 재현한 화면은 아닙니다. 홍보 이미지를 제외한 기능 화면에는 합성된 UI나 사후 보정을 넣지 않았습니다.\n\n## 다시 만들기\n\n프로젝트 의존성과 Playwright Chromium 설치 후 저장소 루트에서 실행합니다.\n\n\`\`\`sh\npnpm run build:e2e\nnode scripts/store-assets.mjs\n\`\`\`\n\n결과는 이 디렉터리에만 저장합니다. 브라우저 프로필은 임시 폴더에 만들고 종료 시 삭제합니다. UI 글꼴은 확장에 동봉된 파일을 사용하며, 프리셋의 독서용 웹글꼴은 앱의 실제 로더가 요청합니다. 네트워크 실패 시 대체 글꼴이 보일 수 있으므로 생성 후 화면을 확인해야 합니다. 이 자료는 심사 제출이나 승인을 의미하지 않습니다.\n`,
     'utf8'
   );
 } finally {

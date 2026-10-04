@@ -1,3 +1,4 @@
+import { MotionButton } from '@/shared/ui/motion-button';
 import { useId, useRef, useState } from 'react';
 import type { SettingsStore } from '@/entities/settings';
 import type { PresetStore } from '@/entities/preset';
@@ -84,7 +85,7 @@ export function BackupPanel({
           <p className="hint">등록한 이미지와 사용자 글꼴 파일은 포함되지 않습니다.</p>
         </header>
         <div className="button-row transfer-actions">
-          <button
+          <MotionButton
             type="button"
             className="primary"
             disabled={!!busy}
@@ -106,8 +107,8 @@ export function BackupPanel({
             }
           >
             파일로 저장
-          </button>
-          <button
+          </MotionButton>
+          <MotionButton
             type="button"
             disabled={!!busy}
             onClick={() =>
@@ -126,8 +127,8 @@ export function BackupPanel({
             }
           >
             JSON 복사
-          </button>
-          <button
+          </MotionButton>
+          <MotionButton
             type="button"
             className="text-button"
             disabled={!!busy}
@@ -136,7 +137,7 @@ export function BackupPanel({
             onClick={() => setExported(exported ? '' : exportSettings())}
           >
             {exported ? 'JSON 접기' : 'JSON 보기'}
-          </button>
+          </MotionButton>
           <DelayedLoading
             busy={busy === 'export'}
             label="설정 파일을 내보내는 중"
@@ -190,7 +191,7 @@ export function BackupPanel({
           }}
         >
           {(['file', 'json'] as const).map((value) => (
-            <button
+            <MotionButton
               key={value}
               id={`${id}-tab-${value}`}
               type="button"
@@ -203,7 +204,7 @@ export function BackupPanel({
               onClick={() => chooseMethod(value)}
             >
               {value === 'file' ? '파일' : 'JSON 텍스트'}
-            </button>
+            </MotionButton>
           ))}
         </div>
         <div
@@ -213,9 +214,9 @@ export function BackupPanel({
           hidden={method !== 'file'}
           className="transfer-file-input"
         >
-          <button type="button" disabled={!!busy} onClick={() => file.current?.click()}>
+          <MotionButton type="button" disabled={!!busy} onClick={() => file.current?.click()}>
             {selectedFile ? '다른 파일 선택' : '파일 선택'}
-          </button>
+          </MotionButton>
           <div className="transfer-file-description">
             {selectedFile ? (
               <>
@@ -271,9 +272,13 @@ export function BackupPanel({
               setError('import', '');
             }}
           />
-          <button type="button" disabled={!!busy || !json.trim()} onClick={() => validate(json)}>
+          <MotionButton
+            type="button"
+            disabled={!!busy || !json.trim()}
+            onClick={() => validate(json)}
+          >
             내용 확인
-          </button>
+          </MotionButton>
         </div>
         <DelayedLoading
           busy={busy === 'import'}
@@ -307,7 +312,7 @@ export function BackupPanel({
               같은 이름은 번호로 구분합니다. 자동 추천 동의, 읽기 위치, 북마크와 독서 통계는
               유지됩니다.
             </p>
-            <button
+            <MotionButton
               type="button"
               className="primary"
               disabled={!!busy}
@@ -331,7 +336,7 @@ export function BackupPanel({
               }
             >
               {busy === 'import' ? '가져오는 중…' : '가져오기 및 적용'}
-            </button>
+            </MotionButton>
           </div>
         ) : null}
       </section>

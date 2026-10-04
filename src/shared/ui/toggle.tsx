@@ -1,3 +1,6 @@
+import { MotionButton } from '@/shared/ui/motion-button';
+import { m, useReducedMotion } from 'motion/react';
+import { motionDuration } from '@/shared/config/motion';
 export function Toggle({
   label,
   value,
@@ -15,8 +18,9 @@ export function Toggle({
   descriptionId?: string;
   showValue?: boolean;
 }) {
+  const reduced = useReducedMotion();
   return (
-    <button
+    <MotionButton
       type="button"
       className={`toggle ${value ? 'on' : ''}`}
       role="switch"
@@ -27,8 +31,15 @@ export function Toggle({
       disabled={disabled}
       onClick={() => onChange(!value)}
     >
-      <span aria-hidden="true" />
+      <span aria-hidden="true">
+        <m.i
+          className="toggle-thumb"
+          initial={false}
+          animate={{ x: value ? 14 : 0 }}
+          transition={{ duration: reduced ? 0 : motionDuration.control }}
+        />
+      </span>
       {showValue ? (value ? '사용' : '미사용') : null}
-    </button>
+    </MotionButton>
   );
 }

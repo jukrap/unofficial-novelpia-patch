@@ -1,3 +1,4 @@
+import { MotionButton } from '@/shared/ui/motion-button';
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { COLOR_PALETTES } from '@/shared/config/paletteData';
 import { Dropdown } from '@/shared/ui/dropdown';
@@ -49,7 +50,7 @@ export function ColorControl({
                 recent: { name: '최근 선택', colors: recent.colors },
                 ...COLOR_PALETTES,
               }).map(([key, group]) => (
-                <button
+                <MotionButton
                   type="button"
                   className={category === key ? 'active' : ''}
                   aria-pressed={category === key}
@@ -57,12 +58,12 @@ export function ColorControl({
                   onClick={() => setCategory(key)}
                 >
                   {group.name}
-                </button>
+                </MotionButton>
               ))}
             </div>
             <div className="palette">
               {(category === 'recent' ? recent.colors : palette.colors).map((color) => (
-                <button
+                <MotionButton
                   type="button"
                   key={color}
                   className={`swatch ${color.toLowerCase() === value.toLowerCase() ? 'selected' : ''}`}
@@ -74,7 +75,7 @@ export function ColorControl({
                   {color.toLowerCase() === value.toLowerCase() ? (
                     <span className="swatch-check">✓</span>
                   ) : null}
-                </button>
+                </MotionButton>
               ))}
             </div>
             {category === 'recent' && recent.colors.length === 0 ? (
