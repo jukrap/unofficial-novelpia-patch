@@ -33,6 +33,7 @@ Chrome에서 `chrome://extensions`를 열고 **개발자 모드 → 압축해제
 
 ## 안내와 문의
 
+- [문서 전체 안내](docs/README.md)
 - [사용 안내와 문제 해결](docs/USAGE.md)
 - [개인정보 처리 안내](docs/PRIVACY.md)
 - [개발 안내](docs/DEVELOPMENT.md) · [기여 방법](CONTRIBUTING.md) · [변경 이력](CHANGELOG.md)

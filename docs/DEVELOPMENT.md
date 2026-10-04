@@ -30,6 +30,8 @@ npm run dev
 
 slice 내부는 `ui`, `model`, `api`, `lib`, `config` 등 실제 역할에 맞는 세그먼트로 나눕니다. 비어 있는 세그먼트는 만들지 않습니다. slice 외부에서는 공개 API를 사용하며 계층과 동적 import 경계는 ESLint로 검사합니다. 도메인에 의존하는 컨트롤을 범용 `shared/ui`로 옮기지 않습니다.
 
+실행 영역별 책임과 설정·본문·저장소의 연결은 [구조와 데이터 흐름](ARCHITECTURE.md)에 정리했습니다.
+
 ## 빌드와 지연 로딩
 
 작은 초기 스크립트가 저장된 화면 색상을 먼저 적용합니다. 독서 런타임과 설정창·프리셋 편집기·종이 효과는 확장에 포함된 ESM 번들로 나누어 필요한 시점에 불러옵니다. 번들 구성은 `modules/esm-reader.ts`에서 관리합니다. 원격 JavaScript를 실행하지 않습니다.
@@ -43,9 +45,11 @@ npm run type-check
 npm run lint
 npm run format:check
 npm run test:unit
+npm run test:release
 npm run test:e2e
+npm run release:check
 npm run build
-npm run zip
+npm run release:package
 ```
 
 `test:e2e`는 테스트용 확장을 빌드하고 Playwright의 Chromium에서 MV3 확장을 로드합니다. 페이지 계산·북마크·읽던 위치·설정 UI·등록 파일·전환·초기 로딩 등을 합성 본문으로 검사합니다. 각 검사는 임시 브라우저 프로필을 사용합니다.
@@ -53,6 +57,21 @@ npm run zip
 CI는 Linux에서 정적 검사·단위 검사·일반 빌드를, Windows에서 MV3 회귀 검사를 실행합니다. 브라우저 검사에 필요한 외부 글꼴은 통제된 fixture를 사용합니다. 공개 CI에는 실제 작품 원문, 로그인 정보나 개인 브라우저 프로필을 넣지 않습니다.
 
 실제 노벨피아 화면과 웹글꼴 CDN 검사는 일반 CI와 분리한 수동 검증입니다. 단위 검사나 빌드 통과만으로 실제 사이트 동작까지 확인했다고 보고하지 마세요. 노벨피아 서비스 요청·추천·광고·결제·접근 권한에 영향을 줄 수 있는 작업은 합성 사례에서 먼저 확인합니다.
+
+### 검사 선택과 산출물
+
+| 변경 범위                    | 관련 검사                                                                         |
+| ---------------------------- | --------------------------------------------------------------------------------- |
+| 페이지·높이·읽던 위치        | `reader`, `reader-height`, `page-effects`, `paragraph-spacing`, `session-restore` |
+| 설정창·프리셋·파일·글꼴      | `ui-finishing`, `preset-loading`, `management`, `user-fonts`, `navigation-fonts`  |
+| 초기 표시·이미지·보조 영역   | `initial-display`, `background-images`, `reading-polish`, `finishing`             |
+| 릴리스·버전·스토어 제출 분기 | `npm run test:release`, `npm run release:check`                                   |
+
+표의 브라우저 검사 이름은 `tests/e2e`의 `.spec.ts` 파일명입니다. 특정 파일만 실행할 때도 먼저 `npm run build:e2e`로 현재 소스를 반영합니다. `--list`는 등록 확인이며 실제 실행이 아닙니다. 부분 검사와 전체 검사를 구분해 기록하세요.
+
+일반 회귀 결과는 `test-results/`에, 실제 사이트 검사 결과는 `_reference/live/`에 남습니다. 실제 사이트 결과에는 작품 내용이나 네트워크 헤더가 포함될 수 있으므로 공개 CI 산출물로 올리지 않습니다.
+
+문서만 바꾸면 링크·명령·포맷·기재한 계약을 검증합니다. 같은 소스의 런타임 검사 결과를 재사용할 때는 그 기준과 미검증 범위를 적습니다. 변경한 코드가 있는데 이전 빌드로 검사한 결과를 새 코드의 성공으로 취급하지 않습니다.
 
 ## 저장과 호환성
 
@@ -67,6 +86,8 @@ CI는 Linux에서 정적 검사·단위 검사·일반 빌드를, Windows에서 
 작업 PR은 `develop`으로, 릴리스 PR은 같은 저장소의 `develop`에서 `main`으로 보냅니다. 릴리스 PR에서 `package.json`·lockfile의 버전과 [변경 이력](../CHANGELOG.md)을 함께 갱신합니다. 자세한 협업 규칙은 [기여 안내](../CONTRIBUTING.md)에 있습니다.
 
 배포 파이프라인은 검증한 동일 ZIP을 GitHub Release와 스토어 제출에 사용합니다. Chrome 웹 스토어 자동 제출은 최초 등록 준비가 끝날 때까지 비활성 상태로 둡니다. 활성화 이후에도 Google 심사 승인과 사용자 브라우저 업데이트 시점은 별개입니다. 배포 인증 값은 저장소에 커밋하지 않습니다.
+
+`release:package`가 만드는 `.output/release/`의 ZIP·SHA256SUMS·메타데이터를 제출 기준으로 사용합니다. 일반 `npm run zip` 결과와 혼동하지 마세요. 활성화 조건, 필요한 변수와 실패 후 재실행은 [배포 운영](RELEASE.md)을 따릅니다.
 
 ## 아이콘과 라이선스
 
