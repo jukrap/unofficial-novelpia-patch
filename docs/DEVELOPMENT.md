@@ -2,7 +2,11 @@
 
 ## 환경 구성
 
-Node.js 22.12 이상, npm, Git을 사용합니다. `.nvmrc`는 Node.js 22를 지정하며 의존성은 `package-lock.json`으로 고정합니다.
+Node.js 26.10 이상, npm, Git을 사용합니다. `.nvmrc`는 검증한 Node.js 26.10.0을 지정하며 CI도 이 파일을 사용합니다. 의존성은 `package-lock.json`으로 고정합니다. Node 버전을 바꾼 뒤에는 `npm ci`로 다시 설치하세요.
+
+`@types/node`는 개발·검증에 사용하는 Node의 주요 버전과 맞춥니다. 주요 버전을 올릴 때는 `.nvmrc`·`engines`·문서를 함께 갱신하고 설치·타입·테스트·빌드 및 MV3 실행을 확인합니다. 개발용 Node 버전 변경이 확장 사용자에게 Node 설치를 요구하는 것은 아닙니다.
+
+Linux에서 공식 Node 바이너리를 쓰려면 `libatomic` 런타임이 필요합니다. Ubuntu·Debian의 패키지 이름은 `libatomic1`이며, `libatomic.so.1` 로딩 오류가 나면 이 시스템 의존성을 확인하세요. [Node의 실행 환경 요구사항](https://github.com/nodejs/node/blob/v26.10.0/BUILDING.md#official-binary-platforms-and-toolchains)을 따릅니다.
 
 ```sh
 npm ci
