@@ -196,6 +196,10 @@ test('page paper stays behind every spread and includes adjustable inner margins
   const paper = page.locator('#novel_drawing_page_c');
   const body = page.locator('#novel_drawing_page');
   await expect(body).toHaveCSS('column-count', '2');
+  // Geometry exists during preparation; compare painted paper only after the
+  // reading position and navigation have been restored and the body is shown.
+  await expect(body.locator('[data-unp-line]').first()).toBeVisible();
+  await expect(page.locator('html')).not.toHaveAttribute('data-unp-preparing', '');
   const original = (await paper.boundingBox())!;
   await updateReader({ horizontalPadding: 80, verticalPadding: 60 });
   await expect(body).toHaveCSS('margin', '60px 80px');
