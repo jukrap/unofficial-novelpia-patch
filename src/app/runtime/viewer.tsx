@@ -22,7 +22,7 @@ import { EpisodeListTheme, nativeModeEntry, reloadNotice } from '../ui/viewer-su
 import { trackReadingStatistics } from './reading-statistics';
 import type { ViewerPreparation } from './bootstrap';
 import { FirstDisplay } from './first-display';
-import { installUiFonts } from '@/shared/platform/ui-fonts';
+import { installUiFonts, loadUiFonts } from '@/shared/platform/ui-fonts';
 import { initializeUserFonts, subscribeFonts } from '@/shared/platform/user-fonts';
 
 export function startViewer(isContextValid = hasExtensionContext, preparation?: ViewerPreparation) {
@@ -140,20 +140,24 @@ export function startViewer(isContextValid = hasExtensionContext, preparation?: 
   const resumePosition = (current: ReaderEngine, ...preferred: (ReadingAnchor | null)[]) => {
     const ticket = current.beginResume();
     const episode = current.roots.episodeId;
-    return storage.local.get(positionKey(episode)).then(
-      (raw) => {
-        if (disposed || current !== engine) return;
-        current.completeResume(
-          ticket,
-          resumeAnchor(episode, ...preferred, raw[positionKey(episode)])
-        );
-      },
-      () => {
-        if (disposed || current !== engine) return;
-        // Do not replace an unread saved position with a startup layout after a failed read.
-        current.completeResume(ticket, resumeAnchor(episode, ...preferred), false);
-      }
-    );
+    return new Promise<void>((resolve) => {
+      let finished = false;
+      const finish = (raw: unknown, succeeded: boolean) => {
+        if (finished) return;
+        finished = true;
+        clearTimeout(timer);
+        if (!disposed && current === engine)
+          current.completeResume(ticket, resumeAnchor(episode, ...preferred, raw), succeeded);
+        resolve();
+      };
+      // A failed/stalled read must not replace the saved anchor, or jump later
+      // after a fallback was already shown to the reader.
+      const timer = setTimeout(() => finish(null, false), 5000);
+      void storage.local.get(positionKey(episode)).then(
+        (raw) => finish(raw[positionKey(episode)], true),
+        () => finish(null, false)
+      );
+    });
   };
   const onNative = async (option: NativeOption, value: boolean | 'scroll' | 'page') => {
     if (option === 'mode') await resumeReady;
@@ -479,8 +483,8 @@ export function startViewer(isContextValid = hasExtensionContext, preparation?: 
       return;
     }
     if (!navigationUi) {
-      navigationPromise ??= import('../ui/navigation-runtime')
-        .then((ui) => {
+      navigationPromise ??= Promise.all([import('../ui/navigation-runtime'), loadUiFonts()])
+        .then(([ui]) => {
           navigationUi = ui;
           if (!disposed) schedule();
         })
@@ -608,22 +612,29 @@ export function startViewer(isContextValid = hasExtensionContext, preparation?: 
       /* A damaged one-time position must not prevent opening the reader. */
     }
     resumeReady = resumePosition(current, priorPosition, modePosition);
-    firstDisplay.attach(current, resumeReady);
     current.refreshServiceRegion();
-    void native
+    const chromeReady = native
       .request({ type: 'read' })
-      .then((value) => {
-        if (!disposed) {
+      .then(async (value) => {
+        if (!disposed && engine === current) {
           state = value;
           if (settings.getSnapshot().needsEffectMigration)
             settings.update({ pageEffect: value.animation ? 'fade' : 'none' });
           engine?.setAnimation(value.animation);
           syncDark();
+          await darkSync;
+          if (disposed || engine !== current) return;
           render();
           mountNavigation();
+          await navigationPromise;
+          if (!disposed && engine === current) mountNavigation();
         }
       })
       .catch(() => {});
+    firstDisplay.attach(
+      current,
+      Promise.all([resumeReady, chromeReady]).then(() => {})
+    );
     render();
     mountNavigation();
   };

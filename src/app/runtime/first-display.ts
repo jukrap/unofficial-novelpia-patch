@@ -10,7 +10,8 @@ export class FirstDisplay {
   private restored = false;
   private deadline: ReturnType<typeof setTimeout> | undefined;
   private frame = 0;
-  private finalFrame = 0;
+  private resourcesExpired = false;
+  private presenting = false;
   private disposed = false;
   private resourceRequest: AbortController | undefined;
   private resourceKey = '';
@@ -50,7 +51,7 @@ export class FirstDisplay {
     this.check();
   }
   private check = () => {
-    if (this.disposed || !this.reader) return;
+    if (this.disposed || !this.reader || this.presenting) return;
     const state = this.reader.getSnapshot();
     if (state.presentationReady) return;
     if (state.error && !state.readingFrame) {
@@ -64,45 +65,55 @@ export class FirstDisplay {
       this.reader.present();
       return;
     }
-    this.deadline ??= setTimeout(() => this.reveal(), 3000);
+    this.deadline ??= setTimeout(() => {
+      this.resourcesExpired = true;
+      this.check();
+    }, 3000);
     const ready =
       this.restored &&
-      state.fontLoadState !== 'idle' &&
-      state.fontLoadState !== 'loading' &&
-      state.backgroundStatus !== 'loading';
+      (this.resourcesExpired ||
+        (state.fontLoadState !== 'idle' &&
+          state.fontLoadState !== 'loading' &&
+          state.backgroundStatus !== 'loading'));
     if (!ready) {
       this.clearFrames();
       return;
     }
-    if (this.frame || this.finalFrame) return;
-    // Font completion and resume restoration can each queue a new layout. Let that
-    // layout paint atomically with the reveal, without exposing its previous geometry.
-    this.frame = requestAnimationFrame(() => {
+    if (this.frame) return;
+    // A font, restored anchor, native sync or measured navigation can still queue
+    // layout after a snapshot is published. Require a short settled window.
+    let revision = -1;
+    let settledAt = 0;
+    const settle = (time: number) => {
       this.frame = 0;
-      this.finalFrame = requestAnimationFrame(() => {
-        this.finalFrame = 0;
-        const latest = this.reader?.getSnapshot();
-        if (
-          latest &&
-          this.restored &&
-          latest.fontLoadState !== 'loading' &&
-          latest.backgroundStatus !== 'loading'
-        )
-          this.reveal();
-      });
-    });
+      if (this.disposed || !this.reader) return;
+      const layout = this.reader.getPresentationLayout();
+      if (layout.pending || layout.revision !== revision) {
+        revision = layout.revision;
+        settledAt = time;
+      } else if (time - settledAt >= 120) {
+        this.reveal();
+        return;
+      }
+      this.frame = requestAnimationFrame(settle);
+    };
+    this.frame = requestAnimationFrame(settle);
   };
   private reveal() {
-    if (this.disposed || !this.reader) return;
+    if (this.disposed || !this.reader || this.presenting) return;
+    this.presenting = true;
     this.clearFrames();
     clearTimeout(this.deadline);
-    this.preparation?.reveal();
-    this.reader.present();
+    const reader = this.reader;
+    void Promise.resolve(this.preparation?.reveal(true)).then(() => {
+      this.presenting = false;
+      if (!this.disposed && this.reader === reader) reader.present();
+      else this.check();
+    });
   }
   private clearFrames() {
     cancelAnimationFrame(this.frame);
-    cancelAnimationFrame(this.finalFrame);
-    this.frame = this.finalFrame = 0;
+    this.frame = 0;
   }
   dispose() {
     this.disposed = true;
