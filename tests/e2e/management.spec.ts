@@ -515,7 +515,9 @@ test('dark action popup opens an existing settings page without discarding its i
     await expect(input).toHaveValue('아직 작성 중인 설정 JSON');
     await expect.poll(() => options.evaluate(() => document.hasFocus())).toBe(true);
     expect(await options.evaluate(() => performance.timeOrigin)).toBe(identity);
-    expect(context.pages().filter((page) => page.url().endsWith('/options.html'))).toHaveLength(1);
+    expect(
+      context.pages().filter((page) => new URL(page.url()).pathname === '/options.html')
+    ).toHaveLength(1);
   } finally {
     await closePopup(popup.root, popup.targetId);
   }
@@ -555,6 +557,38 @@ test('home starts without editing chunks and keeps a preset draft across menu na
   await expect(
     page.getByRole('article', { name: '메뉴를 오가며 만든 프리셋', exact: true })
   ).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
+test('options routes support deep links, reload, history and preserve unsaved editor state', async () => {
+  const page = await context.newPage();
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  await page.goto(`chrome-extension://${extensionId}/options.html#/fonts`);
+  await expect(page.getByRole('heading', { name: '사용자 글꼴', exact: true })).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole('heading', { name: '사용자 글꼴', exact: true })).toBeVisible();
+  await section(page, '프리셋');
+  await expect(page).toHaveURL(/#\/presets$/);
+  await page.getByRole('button', { name: '현재 설정으로 만들기', exact: true }).click();
+  const editor = page.getByRole('form', { name: '프리셋 편집', exact: true });
+  await editor.getByRole('textbox', { name: '이름', exact: true }).fill('뒤로 가도 보존되는 초안');
+  await section(page, '텍스트');
+  await expect(page).toHaveURL(/#\/text$/);
+  await page.goBack();
+  await expect(editor).toBeVisible();
+  await expect(editor.getByRole('textbox', { name: '이름', exact: true })).toHaveValue(
+    '뒤로 가도 보존되는 초안'
+  );
+  await page.goForward();
+  await expect(page.getByRole('heading', { name: '텍스트', exact: true })).toBeVisible();
+  await page.goBack();
+  await expect(editor.getByRole('textbox', { name: '이름', exact: true })).toHaveValue(
+    '뒤로 가도 보존되는 초안'
+  );
+  await page.goto(`chrome-extension://${extensionId}/options.html#/unknown`);
+  await expect(page.getByRole('heading', { name: '홈', exact: true })).toBeVisible();
+  await expect(page).toHaveURL(/#\/$/);
   expect(errors).toEqual([]);
 });
 
