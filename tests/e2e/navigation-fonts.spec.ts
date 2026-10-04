@@ -338,9 +338,20 @@ test('standard, font and color selectors share hover feedback and animated chevr
     const resting = await paint();
     await trigger.hover();
     await expect.poll(paint).not.toBe(resting);
-    const arrow = kind === 'standard' ? trigger.locator('svg').last() : trigger.locator('.chevron');
-    await expect(arrow).toHaveCSS('transition-duration', '0.18s');
-    await trigger.click();
+    const arrow = trigger.locator('.chevron');
+    await trigger.focus();
+    const transforms = await trigger.evaluate(async (button) => {
+      const arrow = button.querySelector('.chevron')!;
+      const samples = [getComputedStyle(arrow).transform];
+      (button as HTMLButtonElement).click();
+      const started = performance.now();
+      while (performance.now() - started < 240) {
+        await new Promise(requestAnimationFrame);
+        samples.push(getComputedStyle(arrow).transform);
+      }
+      return samples;
+    });
+    expect(new Set(transforms).size).toBeGreaterThan(2);
     await expect(trigger).toHaveAttribute('aria-expanded', 'true');
     await expect(arrow).toHaveCSS('transform', 'matrix(-1, 0, 0, -1, 0, 0)');
     await page.keyboard.press('Escape');
@@ -452,8 +463,7 @@ for (const surface of ['themebox', 'options', 'preset'] as const) {
       const search = popup.getByRole('searchbox', { name: '글꼴 이름 검색' });
       const list = popup.locator('.font-list');
       await expect(search).toBeFocused();
-      await expect(popup).toHaveCSS('animation-name', 'control-reveal');
-      await page.waitForTimeout(200);
+      await expect(popup).toHaveCSS('opacity', '1');
       const metrics = await popup.evaluate((element) => {
         const list = element.querySelector('.font-list')!;
         return {

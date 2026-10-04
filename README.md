@@ -12,13 +12,14 @@
 
 Chrome 웹 스토어 등록을 준비하고 있습니다. 아직 스토어에서 설치할 수 없습니다.
 
-직접 빌드하려면 Node.js 26.10 이상과 npm이 필요합니다. `.nvmrc`에 검증한 개발 버전을 지정합니다.
+직접 빌드하려면 Node.js 26.10 이상과 pnpm이 필요합니다. `.nvmrc`에 검증한 개발 버전을 지정합니다.
 
 ```sh
 git clone https://github.com/jukrap/unofficial-novelpia-patch.git
 cd unofficial-novelpia-patch
-npm ci
-npm run build
+npm install --global pnpm@12.9.1
+pnpm install --frozen-lockfile
+pnpm run build
 ```
 
 Chrome에서 `chrome://extensions`를 열고 **개발자 모드 → 압축해제된 확장 프로그램을 로드합니다**를 선택한 뒤 `.output/chrome-mv3` 폴더를 지정하세요. 개발용 빌드에는 스토어 자동 업데이트가 적용되지 않습니다.

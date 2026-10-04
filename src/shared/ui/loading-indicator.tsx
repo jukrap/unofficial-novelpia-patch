@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { animateElement } from '@/shared/lib/motion';
 import loadingStyles from './loading-indicator.css?inline';
 
 export function useDelayedBusy(busy: boolean, delay = 150): boolean {
@@ -18,8 +19,32 @@ export function LoadingIndicator({
   label?: string;
   variant?: 'book' | 'spinner';
 }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  useEffect(() => {
+    const target = ref.current?.querySelector<SVGElement>(
+      variant === 'book' ? '.unp-loading-page' : 'svg'
+    );
+    if (!target) return;
+    const animation = animateElement(
+      target,
+      variant === 'book'
+        ? [
+            { opacity: 0.4, transform: 'translateX(0)' },
+            { opacity: 1, transform: 'translateX(-2px)' },
+            { opacity: 0.4, transform: 'translateX(0)' },
+          ]
+        : [{ transform: 'rotate(0deg)' }, { transform: 'rotate(360deg)' }],
+      {
+        duration: variant === 'book' ? 1100 : 900,
+        easing: variant === 'book' ? 'ease-in-out' : 'linear',
+        iterations: Infinity,
+      }
+    );
+    return animation.cancel;
+  }, [variant]);
   return (
     <span
+      ref={ref}
       className={`unp-loading-indicator unp-loading-${variant}`}
       role="status"
       aria-label={label}

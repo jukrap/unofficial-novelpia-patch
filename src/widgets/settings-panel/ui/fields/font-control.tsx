@@ -1,3 +1,4 @@
+import { MotionButton } from '@/shared/ui/motion-button';
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { getFontCatalog, subscribeFonts, initializeUserFonts } from '@/shared/platform/user-fonts';
 import { fontWeightLabel } from '@/shared/config/font-weight-labels';
@@ -125,7 +126,7 @@ export function FontControl({
               </div>
               <div className="tabs" role="group" aria-label="글꼴 분류">
                 {Object.entries(names).map(([key, label]) => (
-                  <button
+                  <MotionButton
                     type="button"
                     key={key}
                     className={category === key ? 'active' : ''}
@@ -133,7 +134,7 @@ export function FontControl({
                     onClick={() => setCategory(key)}
                   >
                     {label}
-                  </button>
+                  </MotionButton>
                 ))}
               </div>
               <div className="font-list" ref={list}>
@@ -148,7 +149,7 @@ export function FontControl({
                   </p>
                 ) : null}
                 {filtered.map((f) => (
-                  <button
+                  <MotionButton
                     type="button"
                     className={`font-option ${settings.fontFamily === f.name ? 'selected' : ''}`}
                     aria-pressed={settings.fontFamily === f.name}
@@ -195,7 +196,7 @@ export function FontControl({
                         </span>
                       )}
                     </span>
-                  </button>
+                  </MotionButton>
                 ))}
               </div>
             </>
@@ -204,13 +205,13 @@ export function FontControl({
         {error || fontError ? (
           <div className="field-error font-error" role="alert">
             <p>{error || fontError}</p>
-            <button
+            <MotionButton
               type="button"
               disabled={fontLoading}
               onClick={() => (retry ? retry.retry() : setLoader(new FontLoader()))}
             >
               글꼴 다시 시도
-            </button>
+            </MotionButton>
           </div>
         ) : null}
       </Row>

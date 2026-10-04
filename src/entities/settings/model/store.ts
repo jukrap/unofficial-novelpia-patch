@@ -6,6 +6,7 @@ import {
 } from '@/shared/model/preferences';
 import { checkSyncSize, type StoragePort } from '@/shared/platform/storage';
 import { cacheStartup } from '@/shared/platform/startup';
+import { observableState } from '@/shared/model/observable-state';
 
 export const SETTINGS_KEY = 'unp.reader.v1';
 export interface SettingsSnapshot {
@@ -16,14 +17,16 @@ export interface SettingsSnapshot {
   needsEffectMigration: boolean;
 }
 export class SettingsStore {
-  private snapshot: SettingsSnapshot = {
+  readonly state = observableState<SettingsSnapshot>({
     settings: { ...defaults },
     status: 'loading',
     error: '',
     migrationIssues: [],
     needsEffectMigration: false,
-  };
-  private listeners = new Set<() => void>();
+  });
+  private get snapshot() {
+    return this.state.getState();
+  }
   private timer: ReturnType<typeof setTimeout> | undefined;
   private queue = Promise.resolve();
   private revision = 0;
@@ -32,16 +35,10 @@ export class SettingsStore {
   private observation = 0;
   private unlisten: () => void = () => {};
   constructor(private storage: StoragePort) {}
-  getSnapshot = () => this.snapshot;
-  subscribe = (callback: () => void) => {
-    this.listeners.add(callback);
-    return () => {
-      this.listeners.delete(callback);
-    };
-  };
+  getSnapshot = this.state.getState;
+  subscribe = this.state.subscribe;
   private publish(patch: Partial<SettingsSnapshot>) {
-    this.snapshot = { ...this.snapshot, ...patch };
-    this.listeners.forEach((fn) => fn());
+    this.state.setState(patch);
   }
   async initialize() {
     try {
@@ -207,7 +204,7 @@ export class SettingsStore {
     clearTimeout(this.timer);
     this.observation++;
     this.unlisten();
-    this.listeners.clear();
+    this.state.dispose();
   }
 }
 export { defaults };

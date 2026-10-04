@@ -1,4 +1,7 @@
-import { useEffect, useState } from 'react';
+import { MotionButton } from '@/shared/ui/motion-button';
+import { m, useReducedMotion } from 'motion/react';
+import { motionDuration } from '@/shared/config/motion';
+import { useEffect, useState, type ReactNode } from 'react';
 import { EXTENSION_VERSION } from '@/shared/config/extension';
 import { ViewerModeSwitch } from '@/features/viewer-mode';
 import { DelayedLoading } from '@/shared/ui/loading-indicator';
@@ -13,6 +16,21 @@ const linkIcons = {
   github:
     'M8 20v-3c-3 .5-4-1-4-2m12 5v-4c0-1-.4-1.5-1-2 3-.4 5-1.6 5-5 0-1.4-.5-2.5-1.3-3.4.2-.8.2-2-.2-3.1-1.7 0-2.8.8-3.3 1.2a11 11 0 0 0-6.4 0C8.3 3.3 7.2 2.5 5.5 2.5c-.4 1.1-.4 2.3-.2 3.1C4.5 6.5 4 7.6 4 9c0 3.4 2 4.6 5 5-.6.5-1 1-1 2',
 } as const;
+
+function PopupLink({ href, children }: { href: string; children: ReactNode }) {
+  const reduced = useReducedMotion();
+  return (
+    <m.a
+      href={href}
+      target="_blank"
+      rel="noreferrer"
+      whileHover={{ color: 'var(--accent-text)', backgroundColor: 'var(--wash)' }}
+      transition={{ duration: reduced ? 0 : motionDuration.control }}
+    >
+      {children}
+    </m.a>
+  );
+}
 
 export function PopupPage({ fontsReady }: { fontsReady: Promise<boolean> }) {
   const { status, error, loading, refresh, change } = useViewerMode();
@@ -101,13 +119,13 @@ export function PopupPage({ fontsReady }: { fontsReady: Promise<boolean> }) {
           {error ? (
             <div className="popup-error">
               <p role="alert">{error}</p>
-              <button type="button" onClick={() => void refresh()} disabled={loading}>
+              <MotionButton type="button" onClick={() => void refresh()} disabled={loading}>
                 다시 시도
-              </button>
+              </MotionButton>
             </div>
           ) : null}
         </section>
-        <button
+        <MotionButton
           className="primary popup-open-settings"
           type="button"
           disabled={opening}
@@ -127,7 +145,7 @@ export function PopupPage({ fontsReady }: { fontsReady: Promise<boolean> }) {
             <path d="M4 6h16M4 12h16M4 18h16M8 3v6M16 9v6M10 15v6" />
           </svg>
           설정 열기
-        </button>
+        </MotionButton>
         {openError ? (
           <p className="popup-open-error" role="alert">
             {openError}
@@ -135,7 +153,7 @@ export function PopupPage({ fontsReady }: { fontsReady: Promise<boolean> }) {
         ) : null}
         <nav className="popup-links" aria-label="프로젝트 링크">
           {popupLinks.map(({ href, label, icon }) => (
-            <a key={href} href={href} target="_blank" rel="noreferrer">
+            <PopupLink key={href} href={href}>
               <svg
                 width="18"
                 height="18"
@@ -164,7 +182,7 @@ export function PopupPage({ fontsReady }: { fontsReady: Promise<boolean> }) {
               >
                 <path d="M7 17 17 7M7 7h10v10" />
               </svg>
-            </a>
+            </PopupLink>
           ))}
         </nav>
       </div>

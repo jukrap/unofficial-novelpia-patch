@@ -19,3 +19,4 @@ Thumbs.db
 .ai-agent-playbook/
 _reference/
 AGENTS.md
+.pnpm-store/

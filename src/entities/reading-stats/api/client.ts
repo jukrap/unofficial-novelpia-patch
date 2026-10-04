@@ -1,4 +1,5 @@
 import { chromeStorage, hasExtensionContext, type StoragePort } from '@/shared/platform/storage';
+import { observableState } from '@/shared/model/observable-state';
 import {
   emptyStats,
   STATS_CHANNEL,
@@ -23,8 +24,10 @@ const send: StatsTransport = async (command) => {
 };
 
 export class ReadingStatsClient {
-  private snapshot = { ...emptyStats };
-  private listeners = new Set<() => void>();
+  readonly state = observableState<ReadingStatsSnapshot>({ ...emptyStats });
+  private get snapshot() {
+    return this.state.getState();
+  }
   private stop = () => {};
   private initialized = false;
   private disposed = false;
@@ -36,18 +39,12 @@ export class ReadingStatsClient {
     private transport: StatsTransport = send
   ) {}
 
-  getSnapshot = () => this.snapshot;
-  subscribe = (listener: () => void) => {
-    this.listeners.add(listener);
-    return () => {
-      this.listeners.delete(listener);
-    };
-  };
+  getSnapshot = this.state.getState;
+  subscribe = this.state.subscribe;
 
   private publish(snapshot: ReadingStatsSnapshot) {
     if (this.disposed) return;
-    this.snapshot = snapshot;
-    this.listeners.forEach((listener) => listener());
+    this.state.setState(snapshot, true);
   }
 
   private async request(command: ReadingStatsCommand) {
@@ -96,6 +93,6 @@ export class ReadingStatsClient {
     this.disposed = true;
     this.revision++;
     this.stop();
-    this.listeners.clear();
+    this.state.dispose();
   }
 }

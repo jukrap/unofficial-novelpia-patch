@@ -320,6 +320,11 @@ for (const darkMode of [false, true]) {
     }
     await page.getByRole('button', { name: '알림 닫기', exact: true }).click();
     await page.getByRole('button', { name: '설정 닫기', exact: true }).click();
+    // A real reading gesture releases the saved-position guard. Playwright's
+    // automatic scrollIntoView alone is indistinguishable from a late site restore.
+    const viewport = (await page.locator('#novel_box').boundingBox())!;
+    await page.mouse.move(viewport.x + viewport.width / 2, viewport.y + viewport.height / 2);
+    await page.mouse.wheel(0, 20_000);
     await page.locator('#next_epi_btn_bottom').click();
     await expect(page.locator('body')).toHaveAttribute('data-episode-next', 'yes');
   });

@@ -1,4 +1,5 @@
 import { cloneElement, useEffect, useId, useRef, useState, type ReactElement } from 'react';
+import { usePopoverMotion } from './use-popover-motion';
 /** Hover/focus help for actions, kept in the top layer like setting labels. */
 export function Tooltip({
   text,
@@ -9,15 +10,17 @@ export function Tooltip({
 }) {
   const anchor = useRef<HTMLSpanElement>(null);
   const tip = useRef<HTMLDivElement>(null);
+  const popupMotion = usePopoverMotion(tip);
   const id = useId();
   const [open, setOpen] = useState(false);
   const close = () => {
-    if (tip.current?.matches(':popover-open')) tip.current.hidePopover();
+    popupMotion.hide();
     setOpen(false);
   };
   const show = () => {
     if (!anchor.current || !tip.current) return;
     tip.current.showPopover();
+    popupMotion.reveal();
     const bounds = anchor.current.getBoundingClientRect();
     const popup = tip.current.getBoundingClientRect();
     tip.current.style.left = `${Math.max(12, Math.min(bounds.left, innerWidth - popup.width - 12))}px`;
