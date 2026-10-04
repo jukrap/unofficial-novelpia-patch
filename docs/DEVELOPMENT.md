@@ -2,19 +2,20 @@
 
 ## 환경 구성
 
-Node.js 26.10 이상, npm, Git을 사용합니다. `.nvmrc`는 검증한 Node.js 26.10.0을 지정하며 CI도 이 파일을 사용합니다. 의존성은 `package-lock.json`으로 고정합니다. Node 버전을 바꾼 뒤에는 `npm ci`로 다시 설치하세요.
+Node.js 26.10 이상, pnpm 12.9.1, Git을 사용합니다. `.nvmrc`는 검증한 Node.js 26.10.0을 지정하며 CI도 이 파일을 사용합니다. 의존성은 `pnpm-lock.yaml`으로 고정합니다. Node 버전을 바꾼 뒤에는 `pnpm install --frozen-lockfile`로 다시 설치하세요.
 
 `@types/node`는 개발·검증에 사용하는 Node의 주요 버전과 맞춥니다. 주요 버전을 올릴 때는 `.nvmrc`·`engines`·문서를 함께 갱신하고 설치·타입·테스트·빌드 및 MV3 실행을 확인합니다. 개발용 Node 버전 변경이 확장 사용자에게 Node 설치를 요구하는 것은 아닙니다.
 
 Linux에서 공식 Node 바이너리를 쓰려면 `libatomic` 런타임이 필요합니다. Ubuntu·Debian의 패키지 이름은 `libatomic1`이며, `libatomic.so.1` 로딩 오류가 나면 이 시스템 의존성을 확인하세요. [Node의 실행 환경 요구사항](https://github.com/nodejs/node/blob/v26.10.0/BUILDING.md#official-binary-platforms-and-toolchains)을 따릅니다.
 
 ```sh
-npm ci
-npx playwright install chromium
-npm run dev
+npm install --global pnpm@12.9.1
+pnpm install --frozen-lockfile
+pnpm exec playwright install chromium
+pnpm run dev
 ```
 
-일반 빌드는 `npm run build`로 만들고 `.output/chrome-mv3`를 Chrome의 압축해제된 확장 로드 기능으로 엽니다. `npm run zip`은 배포용 ZIP을 `.output`에 생성합니다. 테스트용 빌드는 배포하지 않습니다.
+일반 빌드는 `pnpm run build`로 만들고 `.output/chrome-mv3`를 Chrome의 압축해제된 확장 로드 기능으로 엽니다. `pnpm run zip`은 배포용 ZIP을 `.output`에 생성합니다. 테스트용 빌드는 배포하지 않습니다.
 
 ## 구조
 
@@ -47,15 +48,15 @@ ESLint 본체와 `@eslint/js`는 같은 주요 버전을 사용하고, TypeScrip
 ## 검증 명령
 
 ```sh
-npm run type-check
-npm run lint
-npm run format:check
-npm run test:unit
-npm run test:release
-npm run test:e2e
-npm run release:check
-npm run build
-npm run release:package
+pnpm run type-check
+pnpm run lint
+pnpm run format:check
+pnpm run test:unit
+pnpm run test:release
+pnpm run test:e2e
+pnpm run release:check
+pnpm run build
+pnpm run release:package
 ```
 
 `test:e2e`는 테스트용 확장을 빌드하고 Playwright의 Chromium에서 MV3 확장을 로드합니다. 페이지 계산·북마크·읽던 위치·설정 UI·등록 파일·전환·초기 로딩 등을 합성 본문으로 검사합니다. 각 검사는 임시 브라우저 프로필을 사용합니다.
@@ -71,9 +72,9 @@ CI는 Linux에서 정적 검사·단위 검사·일반 빌드를, Windows에서 
 | 페이지·높이·읽던 위치        | `reader`, `reader-height`, `page-effects`, `paragraph-spacing`, `session-restore` |
 | 설정창·프리셋·파일·글꼴      | `ui-finishing`, `preset-loading`, `management`, `user-fonts`, `navigation-fonts`  |
 | 초기 표시·이미지·보조 영역   | `initial-display`, `background-images`, `reading-polish`, `finishing`             |
-| 릴리스·버전·스토어 제출 분기 | `npm run test:release`, `npm run release:check`                                   |
+| 릴리스·버전·스토어 제출 분기 | `pnpm run test:release`, `pnpm run release:check`                                 |
 
-표의 브라우저 검사 이름은 `tests/e2e`의 `.spec.ts` 파일명입니다. 특정 파일만 실행할 때도 먼저 `npm run build:e2e`로 현재 소스를 반영합니다. `--list`는 등록 확인이며 실제 실행이 아닙니다. 부분 검사와 전체 검사를 구분해 기록하세요.
+표의 브라우저 검사 이름은 `tests/e2e`의 `.spec.ts` 파일명입니다. 특정 파일만 실행할 때도 먼저 `pnpm run build:e2e`로 현재 소스를 반영합니다. `--list`는 등록 확인이며 실제 실행이 아닙니다. 부분 검사와 전체 검사를 구분해 기록하세요.
 
 일반 회귀 결과는 `test-results/`에, 실제 사이트 검사 결과는 `_reference/live/`에 남습니다. 실제 사이트 결과에는 작품 내용이나 네트워크 헤더가 포함될 수 있으므로 공개 CI 산출물로 올리지 않습니다.
 
@@ -93,10 +94,10 @@ CI는 Linux에서 정적 검사·단위 검사·일반 빌드를, Windows에서 
 
 배포 파이프라인은 검증한 동일 ZIP을 GitHub Release와 스토어 제출에 사용합니다. Chrome 웹 스토어 자동 제출은 최초 등록 준비가 끝날 때까지 비활성 상태로 둡니다. 활성화 이후에도 Google 심사 승인과 사용자 브라우저 업데이트 시점은 별개입니다. 배포 인증 값은 저장소에 커밋하지 않습니다.
 
-`release:package`가 만드는 `.output/release/`의 ZIP·SHA256SUMS·메타데이터를 제출 기준으로 사용합니다. 일반 `npm run zip` 결과와 혼동하지 마세요. 활성화 조건, 필요한 변수와 실패 후 재실행은 [배포 운영](RELEASE.md)을 따릅니다.
+`release:package`가 만드는 `.output/release/`의 ZIP·SHA256SUMS·메타데이터를 제출 기준으로 사용합니다. 일반 `pnpm run zip` 결과와 혼동하지 마세요. 활성화 조건, 필요한 변수와 실패 후 재실행은 [배포 운영](RELEASE.md)을 따릅니다.
 
 ## 아이콘과 라이선스
 
-아이콘을 바꾸면 원본과 생성 스크립트를 함께 유지하고 `npm run icons:generate`로 필요한 크기를 생성합니다. 원본 작업 파일은 확장 ZIP에 넣지 않습니다.
+아이콘을 바꾸면 원본과 생성 스크립트를 함께 유지하고 `pnpm run icons:generate`로 필요한 크기를 생성합니다. 원본 작업 파일은 확장 ZIP에 넣지 않습니다.
 
 새 라이브러리나 글꼴을 추가할 때 출처·버전·사용 조건을 확인하고 배포 고지에 반영합니다. UI 동봉 글꼴과 원격 독서용 글꼴, 사용자가 등록한 파일은 배포 범위가 다릅니다. 사용자 등록 파일이나 권한 없는 작품 원문을 테스트 fixture로 커밋하지 않습니다.

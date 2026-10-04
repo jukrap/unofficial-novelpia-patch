@@ -1,0 +1,5 @@
+# Install scripts for optional native file watching are not needed by this build.
+allowBuilds:
+  fsevents: false
+strictDepBuilds: true
+saveExact: true
