@@ -12,7 +12,7 @@
 
 Chrome 웹 스토어 등록을 준비하고 있습니다. 아직 스토어에서 설치할 수 없습니다.
 
-직접 빌드하려면 Node.js 22.12 이상과 npm이 필요합니다.
+직접 빌드하려면 Node.js 26.10 이상과 npm이 필요합니다. `.nvmrc`에 검증한 개발 버전을 지정합니다.
 
 ```sh
 git clone https://github.com/jukrap/unofficial-novelpia-patch.git
@@ -33,6 +33,7 @@ Chrome에서 `chrome://extensions`를 열고 **개발자 모드 → 압축해제
 
 ## 안내와 문의
 
+- [문서 전체 안내](docs/README.md)
 - [사용 안내와 문제 해결](docs/USAGE.md)
 - [개인정보 처리 안내](docs/PRIVACY.md)
 - [개발 안내](docs/DEVELOPMENT.md) · [기여 방법](CONTRIBUTING.md) · [변경 이력](CHANGELOG.md)

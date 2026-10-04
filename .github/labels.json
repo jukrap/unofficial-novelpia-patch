@@ -1,0 +1,89 @@
+[
+  { "name": "bug", "color": "D73A4A", "description": "기존 기능이 의도와 다르게 동작하는 문제" },
+  { "name": "enhancement", "color": "A2EEEF", "description": "새 기능이나 기존 사용 흐름의 개선" },
+  { "name": "documentation", "color": "0075CA", "description": "사용·개발 안내의 수정과 보완" },
+  { "name": "question", "color": "D876E3", "description": "사용 방법이나 기능에 관한 질문" },
+  {
+    "name": "maintenance",
+    "color": "5319E7",
+    "description": "기능 추가 외의 구조 정리·개발 환경·저장소 관리"
+  },
+  {
+    "name": "dependencies",
+    "color": "0366D6",
+    "description": "라이브러리와 GitHub Actions 의존성 변경"
+  },
+  {
+    "name": "release",
+    "color": "0E8A16",
+    "description": "develop에서 main으로 보내는 릴리스 준비 PR"
+  },
+  {
+    "name": "accessibility",
+    "color": "F143AB",
+    "description": "키보드·화면 읽기·대비·동작 줄이기 등 접근성"
+  },
+  {
+    "name": "area: reader",
+    "color": "C5DEF5",
+    "description": "스크롤·페이지 배치, 읽던 위치와 전환 효과"
+  },
+  {
+    "name": "area: settings",
+    "color": "C5DEF5",
+    "description": "테마박스·설정 페이지·팝업의 화면과 조작"
+  },
+  { "name": "area: presets", "color": "C5DEF5", "description": "프리셋 목록·미리보기·편집·적용" },
+  { "name": "area: fonts", "color": "C5DEF5", "description": "웹글꼴·등록 글꼴·두께와 작가 강조" },
+  {
+    "name": "area: storage",
+    "color": "C5DEF5",
+    "description": "설정·등록 파일·통계 저장과 가져오기·내보내기"
+  },
+  {
+    "name": "area: release",
+    "color": "C5DEF5",
+    "description": "배포 ZIP·스토어·설치·업데이트 구성"
+  },
+  { "name": "area: tooling", "color": "C5DEF5", "description": "테스트·빌드·CI·저장소 운영 도구" },
+  {
+    "name": "status: triage",
+    "color": "FBCA04",
+    "description": "아직 재현·범위·처리 방향을 확인하지 않은 새 접수"
+  },
+  {
+    "name": "status: needs-info",
+    "color": "FEF2C0",
+    "description": "확인에 필요한 추가 정보를 요청한 상태"
+  },
+  {
+    "name": "status: blocked",
+    "color": "E99695",
+    "description": "선행 작업이나 외부 조건 때문에 진행할 수 없는 상태"
+  },
+  {
+    "name": "good first issue",
+    "color": "7057FF",
+    "description": "범위와 시작점이 정리돼 처음 기여하기 적합한 작업"
+  },
+  {
+    "name": "help wanted",
+    "color": "008672",
+    "description": "재현·검증·구현 등 참여가 필요한 작업"
+  },
+  {
+    "name": "duplicate",
+    "color": "CFD3D7",
+    "description": "기존 이슈나 PR과 같은 내용이며 원문을 연결한 항목"
+  },
+  {
+    "name": "invalid",
+    "color": "E4E669",
+    "description": "확장 범위 밖이거나 현재 정보로 문제로 분류할 수 없는 항목"
+  },
+  {
+    "name": "wontfix",
+    "color": "D9D9D9",
+    "description": "이유를 설명하고 진행하지 않기로 결정한 항목"
+  }
+]
