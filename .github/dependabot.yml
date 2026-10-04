@@ -11,6 +11,9 @@ updates:
       # Node의 주요 버전은 실행 환경·CI·타입을 함께 확인한 뒤 올립니다.
       - dependency-name: '@types/node'
         update-types: ['version-update:semver-major']
+      # ESLint 파서와 컴파일러 API 호환성을 함께 확인한 뒤 주요 버전을 올립니다.
+      - dependency-name: typescript
+        update-types: ['version-update:semver-major']
     groups:
       eslint-tooling:
         patterns:

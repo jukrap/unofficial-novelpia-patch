@@ -39,6 +39,8 @@ slice 내부는 `ui`, `model`, `api`, `lib`, `config` 등 실제 역할에 맞�
 
 ESLint 본체와 `@eslint/js`는 같은 주요 버전을 사용하고, TypeScript 파서·플러그인은 함께 갱신합니다. Dependabot에서도 이 도구들을 묶어 제안합니다. 새 규칙이 추가되면 경고를 일괄 끄기보다 실제 코드와 의도를 확인합니다.
 
+TypeScript는 현재 ESLint 파서가 지원하는 6.0 계열을 사용합니다. 7.0은 기존 JavaScript 컴파일러 API를 제공하지 않으므로 단순 버전 교체로 올리지 않습니다. 주요 버전 변경은 파서의 peer 의존성과 WXT의 타입 생성·검사까지 확인한 뒤 진행합니다. [TypeScript 7의 도구 호환 안내](https://devblogs.microsoft.com/typescript/announcing-typescript-7-0/#running-side-by-side-with-typescript-6-0)를 참고하세요.
+
 실행 영역별 책임과 설정·본문·저장소의 연결은 [구조와 데이터 흐름](ARCHITECTURE.md)에 정리했습니다.
 
 ## 빌드와 지연 로딩
