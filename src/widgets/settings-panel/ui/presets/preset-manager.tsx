@@ -1,3 +1,5 @@
+import { AnimatePresence } from 'motion/react';
+import { MotionButton } from '@/shared/ui/motion-button';
 import {
   lazy,
   Component,
@@ -9,6 +11,7 @@ import {
   type ReactNode,
 } from 'react';
 import { useStore } from 'zustand';
+import { useScreenMotion } from '@/shared/ui/use-screen-motion';
 import { SettingsStore } from '@/entities/settings';
 import {
   PresetStore,
@@ -55,12 +58,12 @@ class EditorLoadBoundary extends Component<
           현재 뷰어 또는 설정 페이지를 새로고침한 뒤 다시 시도해 주세요. 저장된 프리셋은 유지됩니다.
         </p>
         <div className="button-row">
-          <button type="button" onClick={this.props.onReload}>
+          <MotionButton type="button" onClick={this.props.onReload}>
             현재 페이지 새로고침
-          </button>
-          <button type="button" onClick={this.props.onCancel}>
+          </MotionButton>
+          <MotionButton type="button" onClick={this.props.onCancel}>
             목록으로 돌아가기
-          </button>
+          </MotionButton>
         </div>
       </div>
     );
@@ -97,6 +100,8 @@ export function PresetManager({
   const settings = useStore(store.state, (state) => state.settings);
   const snapshot = useStore(presets.state);
   const [editor, setEditor] = useState<EditorState | null>(null);
+  const workspace = useRef<HTMLDivElement>(null);
+  useScreenMotion(workspace, editor ? 'editor' : 'gallery');
   const [query, setQuery] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -239,7 +244,7 @@ export function PresetManager({
     />
   );
   return (
-    <div className="preset-workspace">
+    <div className="preset-workspace" ref={workspace}>
       <style>{presetStyles}</style>
       {draft ? (
         <EditorLoadBoundary
@@ -308,7 +313,7 @@ export function PresetManager({
           <section className="preset-gallery-group" aria-label="내 프리셋">
             <header className="preset-gallery-heading">
               <h3>내 프리셋</h3>
-              <button
+              <MotionButton
                 type="button"
                 className="primary"
                 ref={createButton}
@@ -316,7 +321,7 @@ export function PresetManager({
                 onClick={() => openEditor()}
               >
                 현재 설정으로 만들기
-              </button>
+              </MotionButton>
             </header>
             {snapshot.presets.length >= 7 ? (
               <input
@@ -362,34 +367,36 @@ export function PresetManager({
           ) : null}
         </>
       )}
-      {confirmation ? (
-        <Modal
-          title={confirmation.kind === 'delete' ? '프리셋 삭제' : '편집 내용 버리기'}
-          onClose={() => setConfirmation(null)}
-        >
-          <p>
-            {confirmation.kind === 'delete'
-              ? `‘${draft?.name}’ 프리셋을 삭제할까요? 현재 읽기 설정은 유지됩니다.`
-              : '저장하지 않은 편집 내용이 있습니다. 이 내용을 버리고 이동할까요?'}
-          </p>
-          <div className="button-row modal-actions">
-            <button type="button" onClick={() => setConfirmation(null)}>
-              {confirmation.kind === 'delete' ? '취소' : '계속 편집'}
-            </button>
-            <button
-              type="button"
-              className="primary"
-              onClick={() => {
-                const action = confirmation.action;
-                setConfirmation(null);
-                action();
-              }}
-            >
-              {confirmation.kind === 'delete' ? '삭제' : '버리고 이동'}
-            </button>
-          </div>
-        </Modal>
-      ) : null}
+      <AnimatePresence>
+        {confirmation ? (
+          <Modal
+            title={confirmation.kind === 'delete' ? '프리셋 삭제' : '편집 내용 버리기'}
+            onClose={() => setConfirmation(null)}
+          >
+            <p>
+              {confirmation.kind === 'delete'
+                ? `‘${draft?.name}’ 프리셋을 삭제할까요? 현재 읽기 설정은 유지됩니다.`
+                : '저장하지 않은 편집 내용이 있습니다. 이 내용을 버리고 이동할까요?'}
+            </p>
+            <div className="button-row modal-actions">
+              <MotionButton type="button" onClick={() => setConfirmation(null)}>
+                {confirmation.kind === 'delete' ? '취소' : '계속 편집'}
+              </MotionButton>
+              <MotionButton
+                type="button"
+                className="primary"
+                onClick={() => {
+                  const action = confirmation.action;
+                  setConfirmation(null);
+                  action();
+                }}
+              >
+                {confirmation.kind === 'delete' ? '삭제' : '버리고 이동'}
+              </MotionButton>
+            </div>
+          </Modal>
+        ) : null}
+      </AnimatePresence>
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { usePopoverMotion } from '@/shared/ui/use-popover-motion';
 import { settingHelp } from '../../config/help';
 export function SettingLabel({
   label,
@@ -10,6 +11,7 @@ export function SettingLabel({
   descriptionId: string;
 }) {
   const tip = useRef<HTMLDivElement>(null);
+  const popupMotion = usePopoverMotion(tip);
   const trigger = useRef<HTMLLabelElement & HTMLSpanElement>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const hovered = useRef(false);
@@ -20,7 +22,7 @@ export function SettingLabel({
   const cancelClose = () => clearTimeout(timer.current);
   const close = () => {
     cancelClose();
-    if (tip.current?.isConnected && tip.current.matches(':popover-open')) tip.current.hidePopover();
+    popupMotion.hide();
     setOpen(false);
   };
   const closeLater = () => {
@@ -35,6 +37,7 @@ export function SettingLabel({
       anchor = trigger.current;
     if (!popup || !anchor || !help) return;
     popup.showPopover();
+    popupMotion.reveal();
     const rect = anchor.getBoundingClientRect();
     const bounds = popup.getBoundingClientRect();
     popup.style.left = `${Math.max(12, Math.min(rect.left, innerWidth - bounds.width - 12))}px`;

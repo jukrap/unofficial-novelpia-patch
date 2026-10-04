@@ -1,3 +1,4 @@
+import { MotionButton } from '@/shared/ui/motion-button';
 import { useEffect, useId, useState, type CSSProperties } from 'react';
 import { numberControls, type NumericKey } from '@/shared/config/controls';
 import { defaults, type Settings } from '@/shared/model/preferences';
@@ -57,14 +58,14 @@ export function NumberControl({
             onChange={(e) => onChange({ [name]: Number(e.target.value) })}
           />
           <div className="number-input">
-            <button
+            <MotionButton
               type="button"
               aria-label={`${config.label} 줄이기`}
               disabled={value <= config.min}
               onClick={() => adjust(-1)}
             >
               <Icon name="minus" />
-            </button>
+            </MotionButton>
             <input
               id={id}
               aria-describedby={helpId}
@@ -83,19 +84,19 @@ export function NumberControl({
                 }
               }}
             />
-            <button
+            <MotionButton
               type="button"
               aria-label={`${config.label} 늘리기`}
               disabled={value >= config.max}
               onClick={() => adjust(1)}
             >
               <Icon name="plus" />
-            </button>
+            </MotionButton>
           </div>
           <span className="unit">{config.unit}</span>
         </div>
         <div className="quick">
-          <button
+          <MotionButton
             type="button"
             className={value === defaults[name] ? 'active' : ''}
             aria-pressed={value === defaults[name]}
@@ -103,9 +104,9 @@ export function NumberControl({
             onClick={() => onChange({ [name]: defaults[name] })}
           >
             기본
-          </button>
+          </MotionButton>
           {config.quick.map((n) => (
-            <button
+            <MotionButton
               type="button"
               title={`${n}${config.unit}`}
               aria-label={`${config.label} ${n}${config.unit}`}
@@ -115,7 +116,7 @@ export function NumberControl({
               onClick={() => onChange({ [name]: n })}
             >
               {n}
-            </button>
+            </MotionButton>
           ))}
         </div>
       </div>

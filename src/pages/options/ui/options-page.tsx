@@ -1,5 +1,8 @@
+import { MotionButton } from '@/shared/ui/motion-button';
 import { useLayoutEffect, useRef, useState } from 'react';
 import { useStore } from 'zustand';
+import { MotionRoot } from '@/shared/ui/motion-root';
+import { useScreenMotion } from '@/shared/ui/use-screen-motion';
 import { HashRouter, useLocation, useNavigate } from 'react-router';
 import { EXTENSION_VERSION } from '@/shared/config/extension';
 import { useToast } from '@/shared/ui/toast';
@@ -21,9 +24,11 @@ const isCommon = (section: OptionsSection) =>
 
 export function OptionsPage(props: OptionsContext) {
   return (
-    <HashRouter>
-      <OptionsContent {...props} />
-    </HashRouter>
+    <MotionRoot>
+      <HashRouter>
+        <OptionsContent {...props} />
+      </HashRouter>
+    </MotionRoot>
   );
 }
 
@@ -41,6 +46,7 @@ function OptionsContent({ store, stats, loadPresets }: OptionsContext) {
   const commonSection = isCommon(section) ? (section as SettingsSection) : lastCommon;
   const heading = useRef<HTMLHeadingElement>(null);
   const content = useRef<HTMLDivElement>(null);
+  useScreenMotion(content, section);
   const [editorActions, setEditorActions] = useState<HTMLDivElement | null>(null);
   useLayoutEffect(() => {
     const column = content.current;
@@ -105,7 +111,7 @@ function OptionsContent({ store, stats, loadPresets }: OptionsContext) {
       <div className="management-workspace">
         <nav className="management-nav" aria-label="관리 항목">
           {optionsSections.map(([id, label]) => (
-            <button
+            <MotionButton
               key={id}
               type="button"
               className={id === 'files' ? 'nav-divider' : ''}
@@ -113,7 +119,7 @@ function OptionsContent({ store, stats, loadPresets }: OptionsContext) {
               onClick={() => navigate(id)}
             >
               {label}
-            </button>
+            </MotionButton>
           ))}
         </nav>
         <div className="management-content" ref={content}>

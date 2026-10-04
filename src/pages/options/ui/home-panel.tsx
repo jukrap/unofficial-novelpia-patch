@@ -1,3 +1,4 @@
+import { MotionButton } from '@/shared/ui/motion-button';
 import { useState } from 'react';
 import { useStore } from 'zustand';
 import type { ReadingStatsClient } from '@/entities/reading-stats';
@@ -30,15 +31,15 @@ export function HomePanel({
           설정은 테마박스와 함께 사용합니다.
         </p>
         <div className="home-shortcuts">
-          <button className="primary" type="button" onClick={() => navigate('presets')}>
+          <MotionButton className="primary" type="button" onClick={() => navigate('presets')}>
             프리셋 보기
-          </button>
-          <button type="button" onClick={() => navigate('text')}>
+          </MotionButton>
+          <MotionButton type="button" onClick={() => navigate('text')}>
             텍스트 설정
-          </button>
-          <button className="text-button" type="button" onClick={() => navigate('files')}>
+          </MotionButton>
+          <MotionButton className="text-button" type="button" onClick={() => navigate('files')}>
             설정 파일 열기
-          </button>
+          </MotionButton>
         </div>
       </section>
       <section
@@ -92,16 +93,20 @@ export function HomePanel({
                 </p>
                 <p>시크릿 창은 기록하지 않습니다.</p>
               </div>
-              <button type="button" className="statistics-manage" onClick={() => navigate('misc')}>
+              <MotionButton
+                type="button"
+                className="statistics-manage"
+                onClick={() => navigate('misc')}
+              >
                 기록 관리
-              </button>
+              </MotionButton>
             </details>
           </>
         ) : null}
         {snapshot.error || retryError ? (
           <div className="statistics-error" role="alert">
             <p>{snapshot.error || retryError}</p>
-            <button
+            <MotionButton
               type="button"
               disabled={busy}
               onClick={async () => {
@@ -118,10 +123,14 @@ export function HomePanel({
               }}
             >
               {busy ? '확인 중…' : '다시 시도'}
-            </button>
-            <button type="button" className="statistics-manage" onClick={() => navigate('misc')}>
+            </MotionButton>
+            <MotionButton
+              type="button"
+              className="statistics-manage"
+              onClick={() => navigate('misc')}
+            >
               기록 관리
-            </button>
+            </MotionButton>
           </div>
         ) : null}
       </section>

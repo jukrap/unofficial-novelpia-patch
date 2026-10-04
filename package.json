@@ -26,11 +26,12 @@
     "cws:status": "node scripts/cws-release.mjs status",
     "cws:submit": "node scripts/cws-release.mjs submit",
     "lint": "eslint src tests scripts modules *.config.*",
-    "format": "prettier --write src tests scripts modules *.config.* .github README.md CONTRIBUTING.md CHANGELOG.md SECURITY.md docs store/**/*.md package.json .prettierrc.json",
-    "format:check": "prettier --check src tests scripts modules *.config.* .github README.md CONTRIBUTING.md CHANGELOG.md SECURITY.md docs store/**/*.md package.json .prettierrc.json"
+    "format": "prettier --write src tests scripts modules *.config.* .github README.md CONTRIBUTING.md CHANGELOG.md SECURITY.md docs store/**/*.md package.json pnpm-workspace.yaml .prettierrc.json",
+    "format:check": "prettier --check src tests scripts modules *.config.* .github README.md CONTRIBUTING.md CHANGELOG.md SECURITY.md docs store/**/*.md package.json pnpm-workspace.yaml .prettierrc.json"
   },
   "dependencies": {
     "fontkit": "2.0.4",
+    "motion": "14.0.0",
     "page-flip": "2.0.7",
     "react": "19.3.0",
     "react-dom": "19.3.0",

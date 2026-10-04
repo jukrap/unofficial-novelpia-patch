@@ -85,6 +85,8 @@ async function updateSettings(patch: Record<string, unknown>) {
 }
 
 async function screenshot(page: Page, name: string) {
+  const content = page.locator('.management-content');
+  if (await content.count()) await expect(content).toHaveCSS('opacity', '1');
   const session = await context.newCDPSession(page);
   const capture = await session.send('Page.captureScreenshot', {
     format: 'png',
@@ -575,6 +577,13 @@ test('options routes support deep links, reload, history and preserve unsaved ed
   await editor.getByRole('textbox', { name: '이름', exact: true }).fill('뒤로 가도 보존되는 초안');
   await section(page, '텍스트');
   await expect(page).toHaveURL(/#\/text$/);
+  await page.mouse.move(1300, 850);
+  const navigation = page.getByRole('navigation', { name: '관리 항목' });
+  const homeButton = navigation.getByRole('button', { name: '홈', exact: true });
+  const otherButton = navigation.getByRole('button', { name: '설정 파일', exact: true });
+  await expect
+    .poll(async () => homeButton.evaluate((el) => getComputedStyle(el).backgroundColor))
+    .toBe(await otherButton.evaluate((el) => getComputedStyle(el).backgroundColor));
   await page.goBack();
   await expect(editor).toBeVisible();
   await expect(editor.getByRole('textbox', { name: '이름', exact: true })).toHaveValue(
@@ -589,6 +598,72 @@ test('options routes support deep links, reload, history and preserve unsaved ed
   await page.goto(`chrome-extension://${extensionId}/options.html#/unknown`);
   await expect(page.getByRole('heading', { name: '홈', exact: true })).toBeVisible();
   await expect(page).toHaveURL(/#\/$/);
+  expect(errors).toEqual([]);
+});
+
+test('replacing a toast gives the new notice its own lifetime during exit motion', async () => {
+  const page = await openOptions();
+  await section(page, '설정 파일');
+  await page.clock.install();
+  const download = page.getByRole('button', { name: '파일로 저장', exact: true });
+  await download.click();
+  await expect(
+    page.getByRole('status').filter({ hasText: '다운로드를 요청했습니다' })
+  ).toBeVisible();
+  await page.clock.fastForward(3900);
+  await download.click();
+  // The outgoing notice still exists for its fade, but must no longer run its timer.
+  await page.clock.fastForward(200);
+  await expect(
+    page.getByRole('status').filter({ hasText: '다운로드를 요청했습니다' })
+  ).toBeVisible();
+  await page.clock.fastForward(3900);
+  await expect(
+    page.getByRole('status').filter({ hasText: '다운로드를 요청했습니다' })
+  ).toBeHidden();
+});
+
+test('Motion popovers survive interrupted closing and respect reduced motion', async () => {
+  const page = await openOptions();
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  page.on('console', (message) => {
+    if (['warning', 'error'].includes(message.type()) && /motion|animat/i.test(message.text()))
+      errors.push(message.text());
+  });
+  await section(page, '텍스트');
+  const trigger = page.getByRole('button', { name: '글꼴 선택', exact: true });
+  const popup = page.locator('.font-dropdown .dropdown-popup');
+  for (let cycle = 0; cycle < 3; cycle++) {
+    await trigger.click();
+    await expect(trigger).toHaveAttribute('aria-expanded', 'true');
+    await page.keyboard.press('Escape');
+    // Reopen before the 180ms exit can finish, without waiting for auto stability.
+    await trigger.evaluate((button) => (button as HTMLButtonElement).click());
+    await expect(trigger).toHaveAttribute('aria-expanded', 'true');
+    await expect(popup).toBeVisible();
+    await expect(popup.getByRole('searchbox')).toBeFocused();
+    await expect
+      .poll(() => popup.evaluate((element) => (element as HTMLElement).inert))
+      .toBe(false);
+    await popup.getByRole('searchbox').fill('프리젠테이션');
+    await expect(popup.locator('.font-option')).toHaveCount(1);
+    await popup.getByRole('searchbox').fill('');
+    await page.keyboard.press('Escape');
+    await expect(popup).toBeHidden();
+    await expect(trigger).toBeFocused();
+  }
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await trigger.click();
+  await expect(popup).toHaveCSS('opacity', '1');
+  expect(
+    await popup.evaluate(
+      (element) =>
+        element.getAnimations().filter((animation) => animation.playState === 'running').length
+    )
+  ).toBe(0);
+  await page.keyboard.press('Escape');
+  await expect(popup).toBeHidden();
   expect(errors).toEqual([]);
 });
 

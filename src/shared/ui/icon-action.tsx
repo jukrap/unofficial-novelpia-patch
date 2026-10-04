@@ -1,5 +1,7 @@
+import { MotionButton } from '@/shared/ui/motion-button';
 import { useEffect, useId, useRef, useState } from 'react';
 import { Icon, type IconName } from './icon';
+import { usePopoverMotion } from './use-popover-motion';
 
 export function IconAction({
   label,
@@ -15,14 +17,16 @@ export function IconAction({
   const id = useId();
   const anchor = useRef<HTMLSpanElement>(null);
   const tip = useRef<HTMLDivElement>(null);
+  const popupMotion = usePopoverMotion(tip);
   const [open, setOpen] = useState(false);
   const hide = () => {
-    tip.current?.hidePopover();
+    popupMotion.hide();
     setOpen(false);
   };
   const show = () => {
     if (!tip.current || !anchor.current) return;
     tip.current.showPopover();
+    popupMotion.reveal();
     const bounds = anchor.current.getBoundingClientRect();
     const tooltip = tip.current.getBoundingClientRect();
     tip.current.style.left = `${Math.max(8, Math.min(bounds.left, innerWidth - tooltip.width - 8))}px`;
@@ -47,7 +51,7 @@ export function IconAction({
   }, [open]);
   return (
     <span ref={anchor} className="icon-action" onPointerEnter={show} onPointerLeave={hide}>
-      <button
+      <MotionButton
         className="icon-button"
         aria-label={label}
         aria-describedby={id}
@@ -57,7 +61,7 @@ export function IconAction({
         onClick={onClick}
       >
         <Icon name={icon} />
-      </button>
+      </MotionButton>
       <div ref={tip} id={id} role="tooltip" popover="manual" className="label-tooltip">
         {label}
       </div>
