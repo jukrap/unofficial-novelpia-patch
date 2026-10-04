@@ -1,0 +1,55 @@
+.background-image-field {
+  display: grid;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+}
+.background-file-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.background-file-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.background-file-note {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.65;
+  margin: 0;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+.background-file-library {
+  display: grid;
+  gap: 10px;
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+}
+.background-file-entry {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.background-file-entry > div {
+  min-width: 0;
+}
+.background-file-entry strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+.background-file-entry small {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  margin-top: 3px;
+  overflow-wrap: anywhere;
+}
+.background-file-entry button {
+  flex-shrink: 0;
+}

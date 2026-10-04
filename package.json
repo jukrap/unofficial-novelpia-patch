@@ -1,0 +1,57 @@
+{
+  "name": "unofficial-novelpia-patch",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "노벨피아 뷰어의 읽기 환경을 개선하는 비공식 Chrome 확장프로그램",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "wxt",
+    "icons:generate": "node scripts/generate-icons.mjs",
+    "prepare": "wxt prepare",
+    "build": "npm run type-check && wxt build",
+    "build:e2e": "wxt build --mode e2e",
+    "zip": "wxt zip",
+    "type-check": "wxt prepare && tsc --noEmit",
+    "test": "vitest",
+    "test:unit": "vitest run",
+    "test:e2e": "npm run build:e2e && playwright test",
+    "test:release": "node --test scripts/release-*.test.mjs scripts/cws-*.test.mjs",
+    "release:check": "node scripts/release-check.mjs",
+    "release:package": "node scripts/release-package.mjs",
+    "cws:status": "node scripts/cws-release.mjs status",
+    "cws:submit": "node scripts/cws-release.mjs submit",
+    "lint": "eslint src tests scripts modules *.config.*",
+    "format": "prettier --write src tests scripts modules *.config.* .github README.md CONTRIBUTING.md CHANGELOG.md SECURITY.md docs store/**/*.md package.json .prettierrc.json",
+    "format:check": "prettier --check src tests scripts modules *.config.* .github README.md CONTRIBUTING.md CHANGELOG.md SECURITY.md docs store/**/*.md package.json .prettierrc.json"
+  },
+  "dependencies": {
+    "fontkit": "2.0.4",
+    "page-flip": "2.0.7",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "@playwright/test": "1.63.0",
+    "@types/chrome": "^0.1.31",
+    "@types/node": "^22.19.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@typescript-eslint/eslint-plugin": "^8.48.0",
+    "@typescript-eslint/parser": "^8.48.0",
+    "@wxt-dev/module-react": "1.2.2",
+    "eslint": "^9.39.1",
+    "eslint-config-prettier": "^10.1.8",
+    "jsdom": "^27.2.0",
+    "prettier": "^3.7.2",
+    "typescript": "^5.9.3",
+    "vite": "8.3.2",
+    "vitest": "5.0.3",
+    "wxt": "0.21.4"
+  }
+}

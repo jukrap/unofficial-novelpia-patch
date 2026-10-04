@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 보안 취약점 비공개 신고
+    url: https://github.com/jukrap/unofficial-novelpia-patch/security/advisories/new
+    about: 계정·인증 정보가 포함될 수 있는 문제는 공개 이슈에 올리지 마세요.

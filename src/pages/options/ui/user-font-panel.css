@@ -1,0 +1,148 @@
+.user-font-manager h2 {
+  margin: 0 0 8px;
+  font-size: 15px;
+}
+.user-font-manager p {
+  margin: 8px 0;
+}
+.font-library-top,
+.font-library-heading,
+.registered-font-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+.font-library-top {
+  padding-bottom: 28px;
+}
+.font-library-top small,
+.font-file-name small,
+.font-library-note,
+.font-library-weights small {
+  color: var(--muted);
+  font-size: 12px;
+}
+.font-library-top button {
+  flex-shrink: 0;
+}
+.font-library-drafts {
+  border-block: 1px solid var(--border);
+  padding: 24px 0;
+  margin-bottom: 28px;
+}
+.font-family-editor {
+  border: 0;
+  padding: 20px 0;
+  margin: 0;
+  min-width: 0;
+}
+.font-family-editor + .font-family-editor {
+  border-top: 1px solid var(--border);
+}
+.font-family-editor legend {
+  font-weight: 600;
+  padding: 0;
+}
+.font-name-field {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+}
+.font-name-field input {
+  width: 100%;
+  box-sizing: border-box;
+}
+.font-face-list {
+  list-style: none;
+  padding: 0;
+  margin: 16px 0 10px;
+}
+.font-face-list li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+}
+.font-file-name {
+  overflow-wrap: anywhere;
+}
+.font-file-name small {
+  display: block;
+}
+.font-library-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+}
+.font-library-heading {
+  border-bottom: 1px solid var(--border);
+  padding: 16px 0;
+}
+.font-library-heading h2 {
+  margin: 0;
+}
+.font-library-heading h2 small {
+  display: inline;
+  color: var(--muted);
+  margin-left: 8px;
+  font-weight: 400;
+}
+.registered-font {
+  border-bottom: 1px solid var(--border);
+  padding: 24px 0;
+}
+.registered-font-heading h3 {
+  font-size: 15px;
+  margin: 0;
+}
+.registered-font-heading > div {
+  display: flex;
+  gap: 8px;
+}
+.registered-font-preview {
+  font-size: 22px;
+  line-height: 1.65;
+  padding: 12px 0;
+  overflow-wrap: anywhere;
+}
+.font-library-weights {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.user-font-manager .font-weight-tag {
+  background: var(--wash);
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.font-library-note {
+  padding-top: 20px;
+  line-height: 1.7;
+}
+@media (max-width: 600px) {
+  .font-library-top {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .font-name-field {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+  .font-face-list li {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .font-face-list .font-file-name {
+    grid-column: 1/-1;
+  }
+  .font-face-list button {
+    justify-self: end;
+  }
+}

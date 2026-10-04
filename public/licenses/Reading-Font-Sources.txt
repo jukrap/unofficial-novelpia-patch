@@ -1,0 +1,58 @@
+본문 글꼴 출처
+확인일: 2026-10-04
+
+이 확장은 아래 글꼴을 본문 표시와 미리보기에 사용합니다. 본문용 글꼴 파일은
+선택 시 외부 CDN에서 불러오며, 이 확장 파일에 포함하거나 변환하지 않습니다.
+확장 UI에 포함한 프리젠테이션 4종에는 별도 Freesentation-OFL.txt가 적용됩니다.
+
+프리젠테이션 (Freesentation)
+제작: Freesentation Authors
+공식 안내: https://freesentation.blog/freesentation
+라이선스: SIL Open Font License 1.1
+
+국립박물관문화재단 클래식체
+제공: 국립박물관문화재단
+공식 안내: https://www.nmf.or.kr/agency/sub/20181024100034469100_contents.do
+
+김정철 손글씨
+제공: (주)정림건축종합건축사사무소
+공식 안내: http://award.junglim.com/
+라이선스: http://award.junglim.com/download/kimjungchul_font_license.pdf
+
+영도체
+제공: 영도구청, 영도문화도시센터
+공식 안내: https://www.yeongdo.go.kr/tour/01488/04658.web
+
+전주완판본 각체
+제공: 전주시
+공식 안내: https://www.jeonju.go.kr/index.9is?contentUid=ff8080818990c349018b041a9e943a6d
+
+인천교육자람체
+제공: 인천광역시교육청
+공식 안내: https://www.ice.go.kr/ice/cm/cntnts/cntntsView.do?cntntsId=943&mi=10874
+
+메이플스토리
+제공: (주)넥슨코리아
+공식 안내: https://maplestory.nexon.com/Media/Font
+
+둥근모꼴+Fixedsys
+제작: 길형진. 원작: 김중태(둥근모꼴), Darien Gavin Valentine(Fixedsys Excelsior)
+공식 안내: https://cactus.tistory.com/193
+라이선스: Public Domain
+
+신라문화체
+제공: 경주시
+공식 안내: https://www.gyeongju.go.kr/open_content/ko/page.do?mnu_uid=3288
+이 글꼴은 경주시가 제공한 신라문화체이며, 공공누리 제1유형(출처표시)
+조건에 따라 이용합니다. 글꼴 파일의 변환이나 수정은 하지 않았습니다.
+
+펴진고딕 (Pyeojin Gothic)
+제작: 서지환 (엔파피)
+공식 안내: https://notforall.tistory.com/7
+공식 저장소·라이선스: https://github.com/Jihwan-Suh/PyeojinGothic
+라이선스: SIL Open Font License 1.1
+
+순바탕
+제공: 한국출판문화산업진흥원
+공식 안내: https://baro.kpipa.or.kr/font/
+라이선스: https://baro.kpipa.or.kr/font/license/

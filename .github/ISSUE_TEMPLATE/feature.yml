@@ -1,0 +1,16 @@
+name: 문의·기능 제안
+description: 사용 중 궁금한 점이나 개선할 점을 알려 주세요.
+title: 'feat: '
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: 어떤 상황에서 필요한가요?
+    validations:
+      required: true
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: 원하는 동작 또는 질문
+    validations:
+      required: true

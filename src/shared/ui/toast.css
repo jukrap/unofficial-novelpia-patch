@@ -1,0 +1,31 @@
+.action-toast {
+  position: fixed;
+  inset: auto auto 24px 50%;
+  transform: translateX(-50%);
+  margin: 0;
+  padding: 10px 12px 10px 16px;
+  width: max-content;
+  max-width: min(480px, calc(100vw - 32px));
+  align-items: center;
+  gap: 16px;
+  color: var(--ink, #292630);
+  background: var(--paper, #fff);
+  border: 1px solid var(--control-border, #bab9c6);
+  border-radius: 8px;
+  box-shadow: 0 6px 24px #17132024;
+  font: inherit;
+  line-height: 1.5;
+  text-align: left;
+}
+.action-toast:popover-open {
+  display: flex;
+}
+.action-toast span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.action-toast .icon-button {
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+}

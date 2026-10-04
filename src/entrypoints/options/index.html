@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="manifest.open_in_tab" content="true" />
+    <title>Unofficial Novelpia Patch, 설정</title>
+    <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon16.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon32.png" />
+    <style>
+      html {
+        background: #faf9fc;
+        color: #30283e;
+        font-family: system-ui;
+      }
+      @media (prefers-color-scheme: dark) {
+        html {
+          background: #24212b;
+          color: #eeeaf4;
+        }
+      }
+      .initial-loading {
+        margin: 20vh auto;
+        text-align: center;
+        opacity: 0;
+        animation: reveal 0s 150ms forwards;
+      }
+      .initial-loading svg {
+        display: block;
+        margin: 0 auto 12px;
+        color: #8463f5;
+        animation: book 850ms ease-in-out infinite alternate;
+      }
+      @keyframes reveal {
+        to {
+          opacity: 1;
+        }
+      }
+      @keyframes book {
+        to {
+          opacity: 0.5;
+          transform: translateY(-2px);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .initial-loading svg {
+          animation: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app" aria-busy="true">
+      <div class="initial-loading" role="status">
+        <svg width="28" height="24" viewBox="0 0 28 24" aria-hidden="true">
+          <path
+            d="M14 5C10 2 5 2 2 4v16c4-2 8-2 12 1 4-3 8-3 12-1V4c-4-2-8-2-12 1Zm0 0v16"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.7"
+          /></svg
+        >설정을 불러오고 있습니다…
+      </div>
+    </div>
+    <script type="module" src="./main.tsx"></script>
+  </body>
+</html>

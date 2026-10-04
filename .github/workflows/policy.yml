@@ -1,0 +1,24 @@
+name: Policy
+
+on:
+  pull_request_target:
+    branches: [main, develop]
+    types: [opened, edited, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+
+jobs:
+  pr-policy:
+    name: PR policy
+    # Private-repository Actions stay off until the owner verifies the free quota.
+    if: github.event.repository.private == false || vars.CI_PRIVATE_ENABLED == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    steps:
+      # Only trusted base code is checked out. Never run PR code in this event.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          persist-credentials: false
+      - run: node scripts/release-check.mjs pr-policy

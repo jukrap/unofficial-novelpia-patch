@@ -1,0 +1,45 @@
+.viewer-mode-setting {
+  width: 100%;
+  min-width: 0;
+}
+.viewer-mode-setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+.viewer-mode-setting-copy {
+  min-width: 0;
+}
+.viewer-mode-setting-label {
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 600;
+}
+.viewer-mode-setting-copy p {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+.viewer-mode-setting-action {
+  display: flex;
+  align-items: center;
+  flex: none;
+  gap: 8px;
+}
+.viewer-mode-setting-busy,
+.viewer-mode-setting-busy .unp-loading-indicator {
+  display: inline-flex;
+  width: 18px;
+  height: 18px;
+}
+.viewer-mode-setting-error {
+  margin: 10px 0 0;
+  color: var(--error);
+  font-size: 12px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
