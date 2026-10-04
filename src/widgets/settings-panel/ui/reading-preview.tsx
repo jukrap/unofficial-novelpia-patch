@@ -1,3 +1,4 @@
+import { MotionButton } from '@/shared/ui/motion-button';
 import {
   useEffect,
   useLayoutEffect,
@@ -12,6 +13,8 @@ import { FontLoader, fontFamily, effectiveWeight, authorWeight } from '@/entitie
 import { emphasisHighlight, emphasisShadow } from '@/shared/config/emphasis';
 import { LoadingIndicator, useDelayedBusy } from '@/shared/ui/loading-indicator';
 import { useBackgroundImage } from '@/shared/ui/use-background-image';
+import { animateElement } from '@/shared/lib/motion';
+import { motionDuration } from '@/shared/config/motion';
 import imageStyles from './reading-preview-loading.css?inline';
 import { useFontRetry } from '../model/font-retry';
 
@@ -38,8 +41,8 @@ export function ReadingPreview({
     if (motion.matches) return;
     // CSS keyframes restart when a retained tab changes from display:none to visible.
     // Start one presentation animation for this decoded resource instead.
-    const animation = imageLayer.current.animate([{ opacity: 0 }, { opacity: 1 }], {
-      duration: 180,
+    const animation = animateElement(imageLayer.current, [{ opacity: 0 }, { opacity: 1 }], {
+      duration: motionDuration.popover * 1000,
       easing: 'ease-out',
     });
     const reduce = () => {
@@ -156,20 +159,20 @@ export function ReadingPreview({
       {image.error ? (
         <div className="preview-load-error" role="alert">
           <span>{image.error}</span>
-          <button type="button" onClick={image.retry}>
+          <MotionButton type="button" onClick={image.retry}>
             다시 시도
-          </button>
+          </MotionButton>
         </div>
       ) : null}
       {fontError ? (
         <div className="preview-load-error" role="alert">
           <span>{fontError}</span>
-          <button
+          <MotionButton
             type="button"
             onClick={() => (retry ? retry.retry() : setLoader(new FontLoader()))}
           >
             다시 시도
-          </button>
+          </MotionButton>
         </div>
       ) : null}
     </figure>

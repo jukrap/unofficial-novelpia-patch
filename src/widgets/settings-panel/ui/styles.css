@@ -118,7 +118,7 @@ h2 {
   height: 20px;
   flex: none;
 }
-.panel-nav button:hover {
+.panel-nav button[data-motion-hover] {
   background: var(--wash);
 }
 .panel-nav .current {
@@ -126,7 +126,7 @@ h2 {
   background: var(--wash);
   font-weight: 600;
 }
-.panel-nav .current:hover {
+.panel-nav .current[data-motion-hover] {
   background: var(--wash);
 }
 .panel-scroll {
@@ -384,8 +384,8 @@ h2 {
 .dropdown > .dropdown-trigger::-webkit-details-marker {
   display: none;
 }
-.dropdown > .dropdown-trigger:hover,
-.select-trigger:hover {
+.dropdown > .dropdown-trigger[data-motion-hover],
+.select-trigger[data-motion-hover] {
   border-color: var(--accent);
   background: var(--wash);
 }
@@ -398,15 +398,12 @@ h2 {
   display: inline-flex;
   color: var(--muted);
   margin-left: auto;
-  transition: transform var(--motion-popover, 180ms);
 }
 .chevron svg {
   width: 16px;
   height: 16px;
 }
-.dropdown[data-open='true'] > .dropdown-trigger .chevron {
-  transform: rotate(180deg);
-}
+
 .dropdown-body {
   border: 1px solid var(--control-border);
   border-radius: 6px;
@@ -509,7 +506,7 @@ h2 {
 .font-option:last-child {
   border-bottom: 0;
 }
-.font-option:hover,
+.font-option[data-motion-hover],
 .font-option.selected {
   background: var(--wash);
 }
@@ -720,20 +717,7 @@ h2 {
 .action-help {
   display: inline-flex;
 }
-.dropdown-popup:popover-open,
-.select-list:popover-open {
-  animation: control-reveal var(--motion-popover) ease-out;
-}
-@keyframes control-reveal {
-  from {
-    opacity: 0;
-    transform: translateY(3px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
+
 .panel-footer p,
 .version {
   color: var(--muted);
@@ -994,7 +978,7 @@ h2 {
   border-radius: 4px;
   background: transparent;
 }
-.number-input button:hover {
+.number-input button[data-motion-hover] {
   background: var(--wash);
 }
 .number-input button svg {
@@ -1073,11 +1057,8 @@ input[type='range']::-moz-range-thumb {
   width: 16px;
   height: 16px;
   color: var(--muted);
-  transition: transform var(--motion-popover, 180ms);
 }
-.select-trigger[aria-expanded='true'] > svg {
-  transform: rotate(180deg);
-}
+
 .select-list {
   position: fixed;
   inset: auto;

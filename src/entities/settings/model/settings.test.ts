@@ -183,8 +183,7 @@ describe('settings migration and persistence', () => {
     db.port.sync.get = async (keys) => {
       const raw = await get(keys);
       const doc = raw[SETTINGS_KEY] as
-        | { schemaVersion: number; data: Record<string, unknown> }
-        | undefined;
+        { schemaVersion: number; data: Record<string, unknown> } | undefined;
       if (doc)
         raw[SETTINGS_KEY] = {
           data: Object.fromEntries(Object.entries(doc.data).reverse()),

@@ -4,7 +4,7 @@ import { readFile, readdir, mkdir, writeFile } from 'node:fs/promises';
 import { posix, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { createZip } from './release-archive.mjs';
-import { validateRelease, versionParts } from './release-check.mjs';
+import { readLockfile, validateRelease, versionParts } from './release-check.mjs';
 
 export const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
 const viewerMatches = ['https://novelpia.com/viewer/*', 'https://www.novelpia.com/viewer/*'];
@@ -120,7 +120,7 @@ export function validatePackage(files, expectedVersion) {
 export async function packageRelease(root = process.cwd()) {
   const [pkg, lock, changelog, files] = await Promise.all([
     readFile(resolve(root, 'package.json'), 'utf8').then(JSON.parse),
-    readFile(resolve(root, 'package-lock.json'), 'utf8').then(JSON.parse),
+    readLockfile(root),
     readFile(resolve(root, 'CHANGELOG.md'), 'utf8'),
     readTree(resolve(root, '.output/chrome-mv3')),
   ]);

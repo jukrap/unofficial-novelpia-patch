@@ -1,3 +1,4 @@
+import { MotionButton } from '@/shared/ui/motion-button';
 import {
   sectionLinks,
   sectionDescriptions,
@@ -6,7 +7,9 @@ import {
 import type { Settings } from '@/shared/model/preferences';
 import type { NativeOption } from '@/shared/model/native-protocol';
 import type { PanelProps, NavigationGuard } from '../model/panel-contract';
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useStore } from 'zustand';
+import { useScreenMotion } from '@/shared/ui/use-screen-motion';
 import { Section, Row, Toggle, NumberControl, SettingGroup } from './fields/controls';
 import { Icon } from '@/shared/ui/icon';
 import { IconAction } from '@/shared/ui/icon-action';
@@ -34,7 +37,7 @@ export function SettingsPanel({
   embedded = false,
   section,
 }: PanelProps) {
-  const snapshot = useSyncExternalStore(store.subscribe, store.getSnapshot);
+  const snapshot = useStore(store.state);
   const settings = snapshot.settings;
   const [error, setError] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -47,6 +50,7 @@ export function SettingsPanel({
   const guarded = (action: () => void) => (guard.current ? guard.current(action) : action());
   const [localSection, setActiveSection] = useState<SettingsSection>('text');
   const activeSection = section ?? localSection;
+  useScreenMotion(scrollRef, activeSection);
   const requestedFocus = useRef(false);
   const { notify, toast } = useToast();
   const focusSection = (id: string) => {
@@ -121,9 +125,9 @@ export function SettingsPanel({
             </span>
           ) : null}
           {onClose ? (
-            <button className="icon-button" aria-label="설정 닫기" onClick={close}>
+            <MotionButton className="icon-button" aria-label="설정 닫기" onClick={close}>
               <Icon name="close" />
-            </button>
+            </MotionButton>
           ) : null}
         </div>
       </header>
@@ -134,7 +138,7 @@ export function SettingsPanel({
               {sectionLinks
                 .filter(([id]) => (native || id !== 'reading') && (!embedded || id !== 'presets'))
                 .map(([id, label]) => (
-                  <button
+                  <MotionButton
                     key={id}
                     aria-label={`${label} 설정으로 이동`}
                     aria-current={activeSection === id ? 'location' : undefined}
@@ -143,7 +147,7 @@ export function SettingsPanel({
                   >
                     <Icon name={id} />
                     <span>{label}</span>
-                  </button>
+                  </MotionButton>
                 ))}
             </nav>
           </aside>
@@ -206,40 +210,40 @@ export function SettingsPanel({
                   <SettingGroup title="읽기 방식">
                     <Row label="읽기 방식">
                       <div className="segments">
-                        <button
+                        <MotionButton
                           className={native.mode === 'scroll' ? 'active' : ''}
                           aria-pressed={native.mode === 'scroll'}
                           onClick={() => option('mode', 'scroll')}
                         >
                           스크롤 방식
-                        </button>
-                        <button
+                        </MotionButton>
+                        <MotionButton
                           className={native.mode === 'page' ? 'active' : ''}
                           aria-pressed={native.mode === 'page'}
                           onClick={() => option('mode', 'page')}
                         >
                           페이지 방식
-                        </button>
+                        </MotionButton>
                       </div>
                     </Row>
                     {native.mode === 'page' ? (
                       <>
                         <Row label="페이지 구성">
                           <div className="segments">
-                            <button
+                            <MotionButton
                               className={settings.spreadMode === 'auto' ? 'active' : ''}
                               aria-pressed={settings.spreadMode === 'auto'}
                               onClick={() => update({ spreadMode: 'auto' })}
                             >
                               자동 한 쪽, 두 쪽
-                            </button>
-                            <button
+                            </MotionButton>
+                            <MotionButton
                               className={settings.spreadMode === 'single' ? 'active' : ''}
                               aria-pressed={settings.spreadMode === 'single'}
                               onClick={() => update({ spreadMode: 'single' })}
                             >
                               항상 한 쪽
-                            </button>
+                            </MotionButton>
                           </div>
                         </Row>
                         {settings.spreadMode === 'auto' ? (
@@ -265,15 +269,15 @@ export function SettingsPanel({
                     ) : null}
                     <Row label="하단 진행바 배치">
                       <div className="segments">
-                        <button
+                        <MotionButton
                           type="button"
                           className={settings.pageNavigationPlacement === 'fixed' ? 'active' : ''}
                           aria-pressed={settings.pageNavigationPlacement === 'fixed'}
                           onClick={() => update({ pageNavigationPlacement: 'fixed' })}
                         >
                           하단 고정
-                        </button>
-                        <button
+                        </MotionButton>
+                        <MotionButton
                           type="button"
                           className={
                             settings.pageNavigationPlacement === 'reserved' ? 'active' : ''
@@ -282,15 +286,15 @@ export function SettingsPanel({
                           onClick={() => update({ pageNavigationPlacement: 'reserved' })}
                         >
                           본문 아래
-                        </button>
-                        <button
+                        </MotionButton>
+                        <MotionButton
                           type="button"
                           className={settings.pageNavigationPlacement === 'overlay' ? 'active' : ''}
                           aria-pressed={settings.pageNavigationPlacement === 'overlay'}
                           onClick={() => update({ pageNavigationPlacement: 'overlay' })}
                         >
                           본문 위
-                        </button>
+                        </MotionButton>
                       </div>
                     </Row>
                   </SettingGroup>
@@ -433,9 +437,9 @@ export function SettingsPanel({
           ) : null}
         </div>
         {onClose ? (
-          <button className="return-button" aria-label="테마박스 닫기" onClick={close}>
+          <MotionButton className="return-button" aria-label="테마박스 닫기" onClick={close}>
             닫기
-          </button>
+          </MotionButton>
         ) : null}
       </footer>
       {toast}

@@ -57,22 +57,20 @@ function receive(next: UserFont[]) {
   fonts = next;
   catalog = [
     FONTS[0]!,
-    ...next.map(
-      (font): FontData => ({
-        name: font.id,
-        displayName: font.displayName,
-        category: 'System',
-        description: '이 브라우저에 등록한 글꼴',
-        urls: [],
-        localRevision: font.revision,
-        metadata: {
-          weights: userFontWeights(font),
-          variableFont: font.faces.some((face) => face.variable),
-          publisher: '',
-          license: '',
-        },
-      })
-    ),
+    ...next.map((font): FontData => ({
+      name: font.id,
+      displayName: font.displayName,
+      category: 'System',
+      description: '이 브라우저에 등록한 글꼴',
+      urls: [],
+      localRevision: font.revision,
+      metadata: {
+        weights: userFontWeights(font),
+        variableFont: font.faces.some((face) => face.variable),
+        publisher: '',
+        license: '',
+      },
+    })),
     ...FONTS.slice(1),
   ];
   listeners.forEach((listener) => listener());

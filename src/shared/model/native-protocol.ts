@@ -1,11 +1,6 @@
 export const NATIVE_CHANNEL = 'unp.native.v1';
 export type NativeOption =
-  | 'mode'
-  | 'dark'
-  | 'illustrations'
-  | 'animation'
-  | 'autoNext'
-  | 'navigation';
+  'mode' | 'dark' | 'illustrations' | 'animation' | 'autoNext' | 'navigation';
 export interface NativeState {
   mode: 'scroll' | 'page';
   dark: boolean;

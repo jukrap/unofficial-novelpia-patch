@@ -14,7 +14,7 @@
 프로젝트 의존성과 Playwright Chromium 설치 후 저장소 루트에서 실행합니다.
 
 ```sh
-npm run build:e2e
+pnpm run build:e2e
 node scripts/store-assets.mjs
 ```
 

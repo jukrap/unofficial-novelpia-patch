@@ -1,3 +1,4 @@
+import { MotionButton } from '@/shared/ui/motion-button';
 import { useEffect, useState, type ComponentType, type ReactNode } from 'react';
 import { DelayedLoading } from '@/shared/ui/loading-indicator';
 import type { OptionsScreenProps } from '../model/contracts';
@@ -32,12 +33,12 @@ export function DeferredScreen({ load, ...props }: OptionsScreenProps & { load: 
       {error ? (
         <div role="alert">
           <p>{error}</p>
-          <button type="button" onClick={() => setAttempt((value) => value + 1)}>
+          <MotionButton type="button" onClick={() => setAttempt((value) => value + 1)}>
             다시 시도
-          </button>
-          <button type="button" onClick={() => window.location.reload()}>
+          </MotionButton>
+          <MotionButton type="button" onClick={() => window.location.reload()}>
             현재 페이지 새로고침
-          </button>
+          </MotionButton>
         </div>
       ) : null}
     </div>
@@ -76,9 +77,9 @@ export function PresetData({
       {error ? (
         <div className="message error" role="alert">
           <p>프리셋을 불러오지 못했습니다. {error}</p>
-          <button type="button" onClick={() => setAttempt((value) => value + 1)}>
+          <MotionButton type="button" onClick={() => setAttempt((value) => value + 1)}>
             다시 시도
-          </button>
+          </MotionButton>
         </div>
       ) : null}
     </div>
