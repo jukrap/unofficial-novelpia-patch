@@ -2,27 +2,32 @@ import { STARTUP_KEY, startupTheme, type StartupTheme } from '@/shared/platform/
 import { chromeStorage } from '@/shared/platform/storage';
 import { readingSurfacePalette } from '@/shared/config/reading-surface-palette';
 import { animateBook } from '@/shared/lib/loading-motion';
+import { initialReadingLines, revealReading } from './reading-reveal';
 
 export interface ViewerPreparation {
   claim(theme: StartupTheme): void;
   handoffPaint(): void;
-  reveal(): void;
+  reveal(animate?: boolean): void | Promise<void>;
   dispose(): void;
   readonly revealed: boolean;
 }
 
-/** First-paint protection owns only reader text, never a service overlay or a site request. */
+/** Protect fiction and its paper while their final geometry is being prepared. */
 export function prepareViewer(): ViewerPreparation {
   const sheet = document.createElement('style');
   sheet.id = 'unp-first-layout';
-  const guard =
-    ':is(#novel_drawing,#novel_drawing_page)>.line[data-line]:not(:has(iframe,[id*="banner"],[class*="banner"],[data-service])){visibility:hidden!important}';
+  const guard = `${initialReadingLines},#unp-navigation-host{visibility:hidden!important}
+    :is(#novel_text,#novel_drawing,#novel_drawing_page,#novel_drawing_page_c){background-color:transparent!important;background-image:none!important}`;
   let stopped = false;
   let claimed = false;
   let handedOff = false;
   let theme: StartupTheme | null = null;
   let loader: HTMLElement | undefined;
   let loaderMotion: ReturnType<typeof animateBook> | undefined;
+  let revealMotion: ReturnType<typeof revealReading> | undefined;
+  let alphaRoot: HTMLElement | undefined;
+  let previousAlpha = '';
+  let previousAlphaPriority = '';
   let loaderDue = false;
   let emptyTimer: ReturnType<typeof setTimeout> | undefined;
   const failureTimer = window.setTimeout(cleanup, 2500);
@@ -30,21 +35,25 @@ export function prepareViewer(): ViewerPreparation {
     loaderDue = true;
     sync();
   }, 150);
-  const rgba = (hex: string, opacity: number) =>
-    `rgba(${parseInt(hex.slice(1, 3), 16)},${parseInt(hex.slice(3, 5), 16)},${parseInt(hex.slice(5, 7), 16)},${opacity / 100})`;
   const paint = () => {
     let colors = '';
     if (theme && !handedOff) {
-      colors = `#novel_box{background-color:${theme.backgroundColor}!important}#novel_text{background-color:${rgba(theme.textAreaBackgroundColor, theme.textAreaOpacity)}!important}`;
+      colors = `#novel_box{background-color:${theme.backgroundColor}!important}`;
       const surface = readingSurfacePalette(theme);
       if (surface)
         colors += `#load_bar>div{color:${surface.ink}!important;background-color:${surface.paper}!important;background-image:none!important;border-color:${surface.border}!important}`;
     }
-    sheet.textContent = `${guard}\n${colors}`;
+    sheet.textContent = `${colors}\n${guard}`;
   };
   function sync() {
     if (stopped) return;
     const root = document.documentElement;
+    if (root && !alphaRoot) {
+      alphaRoot = root;
+      previousAlpha = root.style.getPropertyValue('--unp-initial-alpha');
+      previousAlphaPriority = root.style.getPropertyPriority('--unp-initial-alpha');
+      root.style.setProperty('--unp-initial-alpha', '0');
+    }
     if (root && !sheet.isConnected) root.append(sheet);
     if (root && !root.hasAttribute('data-unp-preparing')) root.dataset.unpPreparing = '';
     const nativeLoader = document.getElementById('load_bar');
@@ -117,6 +126,9 @@ export function prepareViewer(): ViewerPreparation {
     sheet.remove();
     loaderMotion?.cancel();
     loader?.remove();
+    if (previousAlpha)
+      alphaRoot?.style.setProperty('--unp-initial-alpha', previousAlpha, previousAlphaPriority);
+    else alphaRoot?.style.removeProperty('--unp-initial-alpha');
     document.documentElement?.removeAttribute('data-unp-preparing');
   }
   return {
@@ -139,7 +151,17 @@ export function prepareViewer(): ViewerPreparation {
       emptyTimer = undefined;
       paint();
     },
-    reveal: cleanup,
-    dispose: cleanup,
+    reveal(animate = false) {
+      if (stopped) return revealMotion?.finished;
+      cleanup();
+      if (animate) {
+        revealMotion = revealReading();
+        return revealMotion.finished;
+      }
+    },
+    dispose() {
+      cleanup();
+      revealMotion?.cancel();
+    },
   };
 }

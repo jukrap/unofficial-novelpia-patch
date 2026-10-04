@@ -16,6 +16,7 @@ export default defineConfig({
           'reading-polish.spec.ts',
           'management.spec.ts',
           'initial-display.spec.ts',
+          'presentation.spec.ts',
           'navigation-fonts.spec.ts',
           'session-restore.spec.ts',
           'paragraph-spacing.spec.ts',
