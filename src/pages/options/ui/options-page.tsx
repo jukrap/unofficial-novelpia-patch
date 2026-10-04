@@ -1,4 +1,5 @@
-import { useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
+import { useStore } from 'zustand';
 import { EXTENSION_VERSION } from '@/shared/config/extension';
 import { useToast } from '@/shared/ui/toast';
 import type { SettingsSection } from '@/shared/config/settings-sections';
@@ -17,7 +18,8 @@ const isCommon = (section: OptionsSection) =>
   !['home', 'presets', 'files', 'misc', 'fonts'].includes(section);
 
 export function OptionsPage({ store, stats, loadPresets }: OptionsContext) {
-  const snapshot = useSyncExternalStore(store.subscribe, store.getSnapshot);
+  const darkMode = useStore(store.state, (state) => state.settings.darkMode);
+  const error = useStore(store.state, (state) => state.error);
   const [section, setSection] = useState<OptionsSection>('home');
   const [visited, setVisited] = useState<Set<string>>(() => new Set(['home']));
   const [commonSection, setCommonSection] = useState<SettingsSection>('text');
@@ -68,7 +70,7 @@ export function OptionsPage({ store, stats, loadPresets }: OptionsContext) {
   };
   return (
     <main
-      className={`unp-theme panel management-page${snapshot.settings.darkMode ? ' dark' : ''}`}
+      className={`unp-theme panel management-page${darkMode ? ' dark' : ''}`}
       data-testid="management-page"
     >
       <header className="management-header">
@@ -96,9 +98,9 @@ export function OptionsPage({ store, stats, loadPresets }: OptionsContext) {
             </h1>
             <p className="section-description">{optionsDescriptions[section]}</p>
           </header>
-          {snapshot.error ? (
+          {error ? (
             <p className="message error" role="alert">
-              {snapshot.error}
+              {error}
             </p>
           ) : null}
           <div hidden={section !== 'home'}>

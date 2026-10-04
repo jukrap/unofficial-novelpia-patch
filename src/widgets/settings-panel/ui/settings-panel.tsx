@@ -6,7 +6,8 @@ import {
 import type { Settings } from '@/shared/model/preferences';
 import type { NativeOption } from '@/shared/model/native-protocol';
 import type { PanelProps, NavigationGuard } from '../model/panel-contract';
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useStore } from 'zustand';
 import { Section, Row, Toggle, NumberControl, SettingGroup } from './fields/controls';
 import { Icon } from '@/shared/ui/icon';
 import { IconAction } from '@/shared/ui/icon-action';
@@ -34,7 +35,7 @@ export function SettingsPanel({
   embedded = false,
   section,
 }: PanelProps) {
-  const snapshot = useSyncExternalStore(store.subscribe, store.getSnapshot);
+  const snapshot = useStore(store.state);
   const settings = snapshot.settings;
   const [error, setError] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);

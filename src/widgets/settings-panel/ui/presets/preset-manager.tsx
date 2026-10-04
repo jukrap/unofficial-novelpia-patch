@@ -6,9 +6,9 @@ import {
   useEffect,
   useRef,
   useState,
-  useSyncExternalStore,
   type ReactNode,
 } from 'react';
+import { useStore } from 'zustand';
 import { SettingsStore } from '@/entities/settings';
 import {
   PresetStore,
@@ -94,8 +94,8 @@ export function PresetManager({
   onGuardChange?: (guard: NavigationGuard | null) => void;
   actionTarget?: HTMLElement | null;
 }) {
-  const { settings } = useSyncExternalStore(store.subscribe, store.getSnapshot);
-  const snapshot = useSyncExternalStore(presets.subscribe, presets.getSnapshot);
+  const settings = useStore(store.state, (state) => state.settings);
+  const snapshot = useStore(presets.state);
   const [editor, setEditor] = useState<EditorState | null>(null);
   const [query, setQuery] = useState('');
   const [error, setError] = useState('');

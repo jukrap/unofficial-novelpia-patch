@@ -1,4 +1,5 @@
-import { useState, useSyncExternalStore } from 'react';
+import { useState } from 'react';
+import { useStore } from 'zustand';
 import type { ReadingStatsClient } from '@/entities/reading-stats';
 import { DelayedLoading } from '@/shared/ui/loading-indicator';
 import type { OptionsSection } from '../config/navigation';
@@ -16,7 +17,7 @@ export function HomePanel({
   stats: ReadingStatsClient;
   navigate: (section: OptionsSection) => void;
 }) {
-  const snapshot = useSyncExternalStore(stats.subscribe, stats.getSnapshot);
+  const snapshot = useStore(stats.state);
   const [busy, setBusy] = useState(false);
   const [retryError, setRetryError] = useState('');
   return (

@@ -1,4 +1,5 @@
-import { useId, useRef, useState, useSyncExternalStore } from 'react';
+import { useId, useRef, useState } from 'react';
+import { useStore } from 'zustand';
 import { defaults } from '@/entities/settings';
 import { Modal } from '@/shared/ui/modal';
 import { Toggle } from '@/shared/ui/toggle';
@@ -11,7 +12,7 @@ export default function MiscScreen(props: OptionsScreenProps) {
 }
 export function MiscPanel({ store, stats, loadPresets, onNotify }: OptionsScreenProps) {
   const id = useId();
-  const snapshot = useSyncExternalStore(stats.subscribe, stats.getSnapshot);
+  const snapshot = useStore(stats.state);
   const running = useRef(false);
   const [confirming, setConfirming] = useState<Confirmation>(null);
   const [busy, setBusy] = useState(false);
