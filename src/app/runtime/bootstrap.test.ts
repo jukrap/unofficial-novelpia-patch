@@ -35,10 +35,12 @@ it('keeps protection after a line is marked and releases only after an explicit 
   preparation.handoffPaint();
   await vi.advanceTimersByTimeAsync(3000);
   expect(document.getElementById('unp-first-layout')).not.toBeNull();
+  expect(document.documentElement.style.getPropertyValue('--unp-initial-alpha')).toBe('0');
   preparation.reveal();
   expect(document.getElementById('unp-first-layout')).toBeNull();
   expect(document.getElementById('unp-reader-loading')).toBeNull();
   expect(document.documentElement.hasAttribute('data-unp-preparing')).toBe(false);
+  expect(document.documentElement.style.getPropertyValue('--unp-initial-alpha')).toBe('');
   await vi.advanceTimersByTimeAsync(3000);
   expect(document.getElementById('unp-reader-loading')).toBeNull();
 });
@@ -75,11 +77,11 @@ it('does not overlay its loader while the native content loader is visible', asy
   await vi.advanceTimersByTimeAsync(1);
   expect(document.getElementById('unp-reader-loading')).not.toBeNull();
 });
-it('uses cached opacity and reading surface colors before runtime ownership', async () => {
+it('keeps the unfinished paper transparent while applying loading surface colors', async () => {
   setup({ ...defaults, textAreaOpacity: 35, readingSurfaces: 'theme', darkMode: true });
   await vi.advanceTimersByTimeAsync(1);
   const css = document.getElementById('unp-first-layout')!.textContent!;
-  expect(css).toContain('rgba(255,255,255,0.35)');
+  expect(css).toContain('background-color:transparent!important');
   expect(css).toContain('#load_bar>div{color:#f1edf7');
 });
 it('retires cached paint without releasing text protection until the final layout is ready', async () => {
