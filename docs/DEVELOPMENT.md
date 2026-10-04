@@ -71,12 +71,12 @@ CI는 Linux에서 정적 검사·단위 검사·일반 빌드를, Windows에서 
 
 ### 검사 선택과 산출물
 
-| 변경 범위                    | 관련 검사                                                                         |
-| ---------------------------- | --------------------------------------------------------------------------------- |
-| 페이지·높이·읽던 위치        | `reader`, `reader-height`, `page-effects`, `paragraph-spacing`, `session-restore` |
-| 설정창·프리셋·파일·글꼴      | `ui-finishing`, `preset-loading`, `management`, `user-fonts`, `navigation-fonts`  |
-| 초기 표시·이미지·보조 영역   | `initial-display`, `background-images`, `reading-polish`, `finishing`             |
-| 릴리스·버전·스토어 제출 분기 | `pnpm run test:release`, `pnpm run release:check`                                 |
+| 변경 범위                    | 관련 검사                                                                             |
+| ---------------------------- | ------------------------------------------------------------------------------------- |
+| 페이지·높이·읽던 위치        | `reader`, `reader-height`, `page-effects`, `paragraph-spacing`, `session-restore`     |
+| 설정창·프리셋·파일·글꼴      | `ui-finishing`, `preset-loading`, `management`, `user-fonts`, `navigation-fonts`      |
+| 초기 표시·이미지·보조 영역   | `initial-display`, `presentation`, `background-images`, `reading-polish`, `finishing` |
+| 릴리스·버전·스토어 제출 분기 | `pnpm run test:release`, `pnpm run release:check`                                     |
 
 표의 브라우저 검사 이름은 `tests/e2e`의 `.spec.ts` 파일명입니다. 특정 파일만 실행할 때도 먼저 `pnpm run build:e2e`로 현재 소스를 반영합니다. `--list`는 등록 확인이며 실제 실행이 아닙니다. 부분 검사와 전체 검사를 구분해 기록하세요.
 

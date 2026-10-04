@@ -48,7 +48,7 @@ ${emphasisSelector}{font-weight:var(--unp-author-weight) !important}
 [data-unp-transition] [data-unp-line]{opacity:0 !important}
 `;
 const rgba = (hex: string, opacity: number) =>
-  `rgba(${parseInt(hex.slice(1, 3), 16)},${parseInt(hex.slice(3, 5), 16)},${parseInt(hex.slice(5, 7), 16)},${opacity / 100})`;
+  `rgba(${parseInt(hex.slice(1, 3), 16)},${parseInt(hex.slice(3, 5), 16)},${parseInt(hex.slice(5, 7), 16)},calc(${opacity / 100} * var(--unp-initial-alpha,1)))`;
 export class ReaderEngine {
   private ledger = new StyleLedger();
   private fonts: FontLoader;
@@ -65,6 +65,7 @@ export class ReaderEngine {
   private resize: ResizeObserver;
   private mutations: MutationObserver;
   private frame = 0;
+  private layoutRevision = 0;
   private disposed = false;
   private geometry: Geometry | null = null;
   private state: ReaderState;
@@ -165,6 +166,12 @@ export class ReaderEngine {
     this.schedule();
   }
   getSnapshot = () => this.state;
+  getPresentationLayout() {
+    return {
+      revision: this.layoutRevision,
+      pending: !!this.frame || this.syncing || this.pendingServiceLayout,
+    };
+  }
   present() {
     if (!this.state.presentationReady) this.publish({ presentationReady: true });
   }
@@ -639,6 +646,8 @@ export class ReaderEngine {
       this.anchor = this.getAnchor();
     } catch (error) {
       this.publish({ error: String(error) });
+    } finally {
+      this.layoutRevision++;
     }
   }
   private restoreNow(anchor: ReadingAnchor) {
