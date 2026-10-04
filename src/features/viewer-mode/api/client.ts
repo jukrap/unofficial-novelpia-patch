@@ -9,7 +9,7 @@ async function request(message: ViewerModeRequest): Promise<unknown> {
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     if (/context invalidated|receiving end|establish connection/i.test(message))
-      throw new Error(CONNECTION_ERROR);
+      throw new Error(CONNECTION_ERROR, { cause: error });
     throw error instanceof Error ? error : new Error(message);
   }
 }
