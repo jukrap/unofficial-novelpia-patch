@@ -143,7 +143,12 @@ export function startViewer(isContextValid = hasExtensionContext, preparation?: 
   const writePosition = async (anchor: AutomaticPosition, progress: number) => {
     if (completedEpisodes.has(anchor.episodeId) || !isContextValid()) return;
     const result = await chrome.runtime.sendMessage({ type: POSITION_MESSAGE, anchor, progress });
-    if (!result?.ok) throw new Error('읽던 위치를 저장하지 못했습니다. 다시 시도해 주세요.');
+    if (!result?.ok)
+      throw new Error(
+        typeof result?.error === 'string'
+          ? result.error
+          : '읽던 위치를 저장하지 못했습니다. 다시 시도해 주세요.'
+      );
     if (result.completed) completedEpisodes.add(anchor.episodeId);
   };
   const savePosition = (anchor: AutomaticPosition, progress: number) => {
@@ -206,7 +211,7 @@ export function startViewer(isContextValid = hasExtensionContext, preparation?: 
       !disposed && sessionEnabled && settings.getSnapshot().settings.enabled && !switching,
     apply: (mode) => onNative('mode', mode),
     onError: (error) => {
-      nativeError = `읽기 방식을 적용하지 못했습니다. ${String(error)}`;
+      nativeError = `읽기 방식을 적용하지 못했습니다. ${error instanceof Error ? error.message : String(error)}`;
       render();
     },
   });

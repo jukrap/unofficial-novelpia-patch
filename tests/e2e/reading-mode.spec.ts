@@ -200,3 +200,39 @@ test('themebox mode saves the choice and disabling restores the original native 
   expect(await viewer.evaluate(() => localStorage.getItem('viewer_paging'))).toBeNull();
   await expect.poll(settings).toMatchObject({ enabled: false, readingMode: 'page' });
 });
+
+test('trailing-slash episodes save positions and switch from themebox, options and a page preset', async () => {
+  await viewer.goto(`${base}/viewer/1001/?from=list#reader`);
+  await ready('scroll');
+  const slider = viewer.getByRole('slider', { name: '본문 읽기 진행률', exact: true });
+  const rect = (await slider.boundingBox())!;
+  await slider.click({ position: { x: rect.width * 0.3, y: rect.height / 2 } });
+  await expect
+    .poll(() =>
+      context
+        .serviceWorkers()[0]!
+        .evaluate(
+          async () =>
+            (await chrome.storage.local.get('unp.position.v1.1001'))['unp.position.v1.1001']
+        )
+    )
+    .toMatchObject({ episodeId: '1001', edge: 'text' });
+  await viewer.locator('#btn_theme').click();
+  await viewer.getByRole('button', { name: '레이아웃 설정으로 이동', exact: true }).click();
+  await viewer.getByRole('button', { name: '페이지 방식', exact: true }).click();
+  await ready('page');
+  await expect.poll(settings).toMatchObject({ readingMode: 'page' });
+
+  await options.getByRole('button', { name: '스크롤 방식', exact: true }).click();
+  await ready('scroll');
+  await viewer.locator('#btn_theme').click();
+  await viewer.getByRole('button', { name: '프리셋 설정으로 이동', exact: true }).click();
+  const plum = viewer.getByRole('article', { name: '차분한 보라', exact: true });
+  await plum.getByRole('button', { name: '차분한 보라 적용', exact: true }).click();
+  await ready('page');
+  await viewer.locator('#btn_theme').click();
+  await viewer.getByRole('button', { name: '프리셋 설정으로 이동', exact: true }).click();
+  await expect(plum).toContainText('현재 사용 중');
+  await expect(viewer.getByRole('alert')).toHaveCount(0);
+  await viewer.screenshot({ path: test.info().outputPath('slash-page-preset.png') });
+});
