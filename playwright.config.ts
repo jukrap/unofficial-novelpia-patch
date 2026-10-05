@@ -9,6 +9,7 @@ export default defineConfig({
           'reader.spec.ts',
           'reader-height.spec.ts',
           'preset-loading.spec.ts',
+          'preset-layouts.spec.ts',
           'ui-finishing.spec.ts',
           'finishing.spec.ts',
           'background-images.spec.ts',

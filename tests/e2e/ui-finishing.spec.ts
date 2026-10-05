@@ -278,7 +278,7 @@ for (const width of [1504, 390]) {
     });
     for (const [name, size, lineHeight] of [
       ['최대 글자 미리보기', 50, 200],
-      ['큰 글씨', 24, 43.2],
+      ['큰 글씨', 26, 49.4],
     ] as const) {
       const card = page.getByRole('article', { name, exact: true });
       await expect(card).toBeAttached();

@@ -8,7 +8,7 @@
 | ---------------- | -------------------------------------------------- | ----------------------------------------------------------- |
 | 콘텐츠 스크립트  | `src/entrypoints/content.ts`                       | 초기 표시 준비, 확장 내부 독서 런타임 로딩과 연결 종료 처리 |
 | 사이트 MAIN 영역 | `src/entrypoints/native.content.ts`                | 허용한 원사이트 설정·상태·이동을 연결하는 브리지            |
-| 서비스 워커      | `src/entrypoints/background.ts`                    | 등록 파일, 통계 기록, 뷰어 전환 처리                        |
+| 서비스 워커      | `src/entrypoints/background.ts`                    | 등록 파일, 자동 위치·통계 기록, 뷰어 전환 처리              |
 | 설정 페이지·팝업 | `src/entrypoints/options`, `src/entrypoints/popup` | React 화면의 진입점                                         |
 
 콘텐츠 스크립트의 조립은 `src/app/runtime/viewer.tsx`, 설정창과 탐색바의 연결은 `src/app/ui`에 있습니다. 사이트에 삽입하는 설정 UI는 Shadow DOM으로 사이트 CSS와 분리합니다. `ReaderEngine`은 사이트가 제공한 본문 DOM을 측정하고 배치하며, 본문 전체를 React로 다시 렌더링하지 않습니다.
@@ -21,6 +21,8 @@ flowchart LR
   App --> Engine[ReaderEngine]
   Engine --> DOM[원사이트 본문 DOM]
   UI --> Worker[서비스 워커]
+  App --> Worker
+  Worker --> Store
   Worker --> Files[확장 IndexedDB]
   App --> Bridge[MAIN 브리지]
 ```

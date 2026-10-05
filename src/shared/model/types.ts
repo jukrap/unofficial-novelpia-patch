@@ -34,7 +34,7 @@ export interface LegacySettings {
 }
 
 export interface BackgroundImageSettings {
-  backgroundImageSource: 'url' | 'file';
+  backgroundImageSource: 'url' | 'file' | 'builtin';
   backgroundAssetId: string | null;
 }
 export type PageEffect = 'none' | 'slide' | 'fade' | 'paper' | 'fold';

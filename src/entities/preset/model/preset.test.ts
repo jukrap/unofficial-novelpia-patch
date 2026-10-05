@@ -175,19 +175,19 @@ describe('preset storage and backups', () => {
       '종이',
       '어두움',
       '큰 글씨',
-      '고대비',
-      '회색 종이',
-      '세피아',
-      '짙은 보라',
       '좁은 본문',
       '넓은 본문',
+      '밝은 돌빛',
+      '옅은 녹색',
+      '짙은 청회색',
+      '차분한 보라',
     ]);
     expect(builtInPresets.slice(0, 4).map((preset) => preset.settings.fontSize)).toEqual([
-      18, 20, 18, 24,
+      18, 20, 20, 26,
     ]);
-    expect(legacyBuiltInPresets).toHaveLength(35);
+    expect(legacyBuiltInPresets).toHaveLength(44);
     const catalogs = [...builtInPresets, ...legacyBuiltInPresets];
-    expect(new Set(catalogs.map((preset) => preset.id)).size).toBe(45);
+    expect(new Set(catalogs.map((preset) => preset.id)).size).toBe(54);
     expect(catalogs.every((preset) => !preset.settings.autoRecommend)).toBe(true);
     const db = memoryStorage();
     const store = new PresetStore(db.port);
@@ -205,6 +205,49 @@ describe('preset storage and backups', () => {
     await expect(store.save('덮어쓰기', '', defaults, legacyBuiltInPresets[0]!.id)).rejects.toThrow(
       '기본 프리셋'
     );
+    store.dispose();
+  });
+  it('carries packaged backgrounds across copy/export/import without rewriting a saved appearance', async () => {
+    const db = memoryStorage();
+    const store = new PresetStore(db.port);
+    await store.initialize();
+    const old = findPreset('preset_builtin_paper')!;
+    const saved = await store.save('예전 종이', '', { ...defaults, ...old.settings });
+    expect(saved.settings).toMatchObject({
+      maxWidth: 800,
+      horizontalPadding: 30,
+      verticalPadding: 20,
+    });
+    const scenes = builtInPresets.filter(
+      (item) => item.settings.backgroundImageSource === 'builtin'
+    );
+    expect(scenes).toHaveLength(4);
+    for (const scene of scenes) {
+      const settings = applyPresetSettings(
+        { ...defaults, autoRecommend: true, pageEffect: 'fold', pageNavigationPlacement: 'fixed' },
+        scene.settings
+      );
+      expect(settings).toMatchObject({
+        autoRecommend: true,
+        pageEffect: 'fold',
+        pageNavigationPlacement: 'fixed',
+      });
+      await store.save(scene.name, '', settings);
+      const exported = store.export(settings);
+      expect(exported).not.toContain('chrome-extension://');
+      const restored = store.parseImport(exported);
+      expect(restored.settings).toMatchObject({
+        backgroundImageSource: 'builtin',
+        backgroundAssetId: scene.settings.backgroundAssetId,
+      });
+      expect(restored.presets.find((item) => item.name === scene.name)?.settings).toMatchObject({
+        backgroundAssetId: scene.settings.backgroundAssetId,
+        readerHeightPercent: scene.settings.readerHeightPercent,
+      });
+    }
+    expect(
+      store.getSnapshot().presets.find((item) => item.id === saved.id)?.settings
+    ).toMatchObject({ maxWidth: 800 });
     store.dispose();
   });
   it('serializes concurrent CRUD, keeps IDs and rejects duplicate names', async () => {

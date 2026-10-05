@@ -66,12 +66,10 @@ export function PresetCard({
           <dt>너비</dt>
           <dd>{settings.maxWidth}px</dd>
         </div>
-        {settings.readerHeightPercent !== 100 ? (
-          <div>
-            <dt>높이</dt>
-            <dd>{settings.readerHeightPercent}%</dd>
-          </div>
-        ) : null}
+        <div>
+          <dt>높이</dt>
+          <dd>{settings.readerHeightPercent}%</dd>
+        </div>
         <div>
           <dt>여백</dt>
           <dd>

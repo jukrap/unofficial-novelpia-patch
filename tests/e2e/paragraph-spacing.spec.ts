@@ -236,6 +236,9 @@ test('settings and preset previews expose paragraph spacing, preserve the choice
 test('scrolling inside a paragraph gap saves the next visible text instead of jumping back', async () => {
   await update({ paragraphGap: 100 });
   await expect.poll(async () => (await measure()).padding).toBe('100px');
+  // A hidden startup layout is not a reading interaction to persist.
+  await expect(page.locator('#unp-navigation-host')).toBeVisible();
+  await expect(page.locator('#unp-navigation-host')).toHaveCSS('opacity', '1');
   await page.locator('#novel_box').evaluate((box) => {
     const first = box.querySelector<HTMLElement>('.line[data-line="0"]')!;
     box.scrollTop = first.offsetTop + first.offsetHeight - 75;

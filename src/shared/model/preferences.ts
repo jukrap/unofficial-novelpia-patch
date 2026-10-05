@@ -40,7 +40,7 @@ export const settingsSchema = z.object({
   backgroundType: z.enum(['color', 'image']),
   backgroundColor: color,
   backgroundImage: imageUrl,
-  backgroundImageSource: z.enum(['url', 'file']),
+  backgroundImageSource: z.enum(['url', 'file', 'builtin']),
   backgroundAssetId: z.string().min(1).max(160).nullable(),
   backgroundImageFade: z.boolean(),
   pageEffect: z.enum(['none', 'slide', 'fade', 'paper', 'fold']),
