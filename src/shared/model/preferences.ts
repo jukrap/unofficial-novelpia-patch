@@ -19,6 +19,7 @@ const imageUrl = z
   }, 'http 또는 https 이미지 주소를 입력해 주세요.');
 export const settingsSchema = z.object({
   enabled: z.boolean(),
+  readingMode: z.enum(['scroll', 'page']).nullable(),
   spreadMode: z.enum(['auto', 'single']),
   pageGap: z.number().min(0).max(PAGE_GAP_MAX),
   pageNavigationPlacement: z.enum(['reserved', 'fixed', 'overlay']),
@@ -59,6 +60,8 @@ export const defaults: Settings = {
   maxWidth: 880,
   paragraphGap: 1,
   enabled: true,
+  // Older settings inherit the native mode once, rather than silently switching it.
+  readingMode: null,
   spreadMode: 'auto',
   pageGap: 20,
   pageNavigationPlacement: 'overlay',
@@ -87,6 +90,10 @@ export function visualSettings(settings: Settings): Settings {
 }
 /** Presets change reading appearance, never extension state or recommendation consent. */
 export const PRESET_SETTING_KEYS = [
+  'readingMode',
+  'spreadMode',
+  'pageEffect',
+  'pageNavigationPlacement',
   'maxWidth',
   'horizontalPadding',
   'verticalPadding',
@@ -116,15 +123,28 @@ export const PRESET_SETTING_KEYS = [
   'darkMode',
 ] as const satisfies readonly (keyof Settings)[];
 
+const READING_MODE_KEYS: readonly (keyof Settings)[] = [
+  'readingMode',
+  'spreadMode',
+  'pageEffect',
+  'pageNavigationPlacement',
+];
+
 export function applyPresetSettings(current: Settings, preset: Partial<Settings>): Settings {
   const next = { ...current };
   for (const key of PRESET_SETTING_KEYS)
-    if (preset[key] !== undefined) Object.assign(next, { [key]: preset[key] });
+    if (
+      preset[key] !== undefined &&
+      !(preset.readingMode == null && READING_MODE_KEYS.includes(key))
+    )
+      Object.assign(next, { [key]: preset[key] });
   return next;
 }
 
 export function presetSettingsEqual(a: Partial<Settings>, b: Partial<Settings>): boolean {
   return PRESET_SETTING_KEYS.every((key) => {
+    // Old presets never owned these options. Ignore their default-filled snapshots.
+    if (b.readingMode == null && READING_MODE_KEYS.includes(key)) return true;
     const left = a[key] ?? defaults[key];
     const right = b[key] ?? defaults[key];
     return key.endsWith('Color') && typeof left === 'string' && typeof right === 'string'

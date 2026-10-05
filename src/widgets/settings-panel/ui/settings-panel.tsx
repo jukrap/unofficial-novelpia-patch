@@ -17,7 +17,6 @@ import { PresetManager } from './presets/preset-manager';
 import { InfoPanel } from './info-panel';
 import { VisualSettingsFields } from './fields/visual-fields';
 import { useToast } from '@/shared/ui/toast';
-import { SelectControl } from '@/shared/ui/select-control';
 export function SettingsPanel({
   store,
   presets,
@@ -202,107 +201,9 @@ export function SettingsPanel({
           >
             <VisualSettingsFields
               section="layout"
-              showPageGap={false}
+              readingContext={native ? 'viewer' : 'settings'}
               settings={settings}
               onChange={update}
-              before={
-                <SettingGroup title={native ? '읽기 방식' : '페이지와 탐색'}>
-                  {native ? (
-                    <Row label="읽기 방식">
-                      <div className="segments">
-                        <MotionButton
-                          className={native.mode === 'scroll' ? 'active' : ''}
-                          aria-pressed={native.mode === 'scroll'}
-                          onClick={() => option('mode', 'scroll')}
-                        >
-                          스크롤 방식
-                        </MotionButton>
-                        <MotionButton
-                          className={native.mode === 'page' ? 'active' : ''}
-                          aria-pressed={native.mode === 'page'}
-                          onClick={() => option('mode', 'page')}
-                        >
-                          페이지 방식
-                        </MotionButton>
-                      </div>
-                    </Row>
-                  ) : (
-                    <p className="section-description">
-                      스크롤·페이지 전환은 회차의 테마박스에서 변경합니다. 페이지 구성과 효과는
-                      페이지 방식에서 적용됩니다.
-                    </p>
-                  )}
-                  {!native || native.mode === 'page' ? (
-                    <>
-                      <Row label="페이지 구성">
-                        <div className="segments">
-                          <MotionButton
-                            className={settings.spreadMode === 'auto' ? 'active' : ''}
-                            aria-pressed={settings.spreadMode === 'auto'}
-                            onClick={() => update({ spreadMode: 'auto' })}
-                          >
-                            자동 한 쪽, 두 쪽
-                          </MotionButton>
-                          <MotionButton
-                            className={settings.spreadMode === 'single' ? 'active' : ''}
-                            aria-pressed={settings.spreadMode === 'single'}
-                            onClick={() => update({ spreadMode: 'single' })}
-                          >
-                            항상 한 쪽
-                          </MotionButton>
-                        </div>
-                      </Row>
-                      {settings.spreadMode === 'auto' ? (
-                        <NumberControl name="pageGap" settings={settings} onChange={update} />
-                      ) : null}
-                      <Row label="페이지 효과">
-                        <SelectControl
-                          label="페이지 효과"
-                          value={settings.pageEffect}
-                          onChange={(value) =>
-                            update({ pageEffect: value as Settings['pageEffect'] })
-                          }
-                          options={[
-                            { value: 'none', label: '없음' },
-                            { value: 'slide', label: '옆으로 밀기' },
-                            { value: 'fade', label: '페이드' },
-                            { value: 'paper', label: '종이 회전' },
-                            { value: 'fold', label: '종이 접힘' },
-                          ]}
-                        />
-                      </Row>
-                    </>
-                  ) : null}
-                  <Row label="하단 진행바 배치">
-                    <div className="segments">
-                      <MotionButton
-                        type="button"
-                        className={settings.pageNavigationPlacement === 'fixed' ? 'active' : ''}
-                        aria-pressed={settings.pageNavigationPlacement === 'fixed'}
-                        onClick={() => update({ pageNavigationPlacement: 'fixed' })}
-                      >
-                        하단 고정
-                      </MotionButton>
-                      <MotionButton
-                        type="button"
-                        className={settings.pageNavigationPlacement === 'reserved' ? 'active' : ''}
-                        aria-pressed={settings.pageNavigationPlacement === 'reserved'}
-                        onClick={() => update({ pageNavigationPlacement: 'reserved' })}
-                      >
-                        본문 아래
-                      </MotionButton>
-                      <MotionButton
-                        type="button"
-                        className={settings.pageNavigationPlacement === 'overlay' ? 'active' : ''}
-                        aria-pressed={settings.pageNavigationPlacement === 'overlay'}
-                        onClick={() => update({ pageNavigationPlacement: 'overlay' })}
-                      >
-                        본문 위
-                      </MotionButton>
-                    </div>
-                  </Row>
-                </SettingGroup>
-              }
             />
           </Section>
           <Section

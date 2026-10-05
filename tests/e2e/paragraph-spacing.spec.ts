@@ -87,8 +87,7 @@ async function measure() {
 for (const mode of ['scroll', 'page'] as const) {
   test(`paragraph and blank spacing are independent in ${mode}, including wraps and native cleanup`, async () => {
     if (mode === 'page') {
-      await page.evaluate(() => localStorage.setItem('viewer_paging', '1'));
-      await page.reload();
+      await update({ readingMode: 'page' });
     }
     await expect(page.locator(`[data-unp-reader="${mode}"]`)).toBeVisible();
     await expect.poll(async () => (await measure()).blankMargin).toBe('8px');

@@ -524,7 +524,7 @@ for (const width of [1504, 390]) {
   });
 }
 
-test('page gap and navigation placement keep separate preset and viewer behavior', async () => {
+test('page configuration and navigation placement are editable in isolated preset drafts', async () => {
   const page = await openViewer();
   await goSection(page, '레이아웃');
   const gap = page.getByRole('spinbutton', { name: '두 쪽 사이 간격', exact: true });
@@ -573,7 +573,10 @@ test('page gap and navigation placement keep separate preset and viewer behavior
   await editor.getByRole('tab', { name: '레이아웃', exact: true }).click();
   const draftGap = editor.getByRole('spinbutton', { name: '두 쪽 사이 간격', exact: true });
   await expect(draftGap).toHaveValue('64');
-  await expect(options.getByRole('button', { name: '본문 위', exact: true })).toHaveCount(0);
+  await expect(editor.getByRole('button', { name: '본문 위', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'true'
+  );
   await draftGap.fill('120');
   await draftGap.press('Enter');
   expect(await readSettings()).toMatchObject({ pageGap: 64, pageNavigationPlacement: 'overlay' });

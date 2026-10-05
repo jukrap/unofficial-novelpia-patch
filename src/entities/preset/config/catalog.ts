@@ -23,7 +23,7 @@ function preset(id: string, name: string, description: string, values: Partial<S
     description,
     isDefault: true,
     createdAt: 0,
-    settings: { ...defaults, ...values },
+    settings: { ...defaults, readingMode: 'scroll', ...values },
   };
 }
 const night = {
@@ -43,6 +43,7 @@ const image = (id: string): Partial<Settings> => ({
 export const builtInPresets: Preset[] = [
   preset('basic', '기본', '화면을 채우는 익숙한 읽기 환경', {}),
   preset('paper_v2', '종이', '큰 안쪽 여백, 높이를 조금 줄인 책 형태', {
+    readingMode: 'page',
     fontFamily: 'MaruBuri',
     fontSize: 20,
     lineHeight: 185,
@@ -101,6 +102,7 @@ export const builtInPresets: Preset[] = [
     textColor: '#2B3038',
   }),
   preset('warm_stone', '밝은 돌빛', '로우 폴리 배경 · 여백이 큰 밝은 책', {
+    readingMode: 'page',
     ...image('warm-stone'),
     fontFamily: 'MaruBuri',
     fontSize: 20,
@@ -130,6 +132,7 @@ export const builtInPresets: Preset[] = [
     textColor: '#293C32',
   }),
   preset('deep_slate', '짙은 청회색', '로우 폴리 배경 · 폭이 좁고 여백이 깊은 두 쪽', {
+    readingMode: 'page',
     ...night,
     ...image('deep-slate'),
     fontFamily: 'Freesentation',
@@ -145,6 +148,8 @@ export const builtInPresets: Preset[] = [
     textAreaOpacity: 86,
   }),
   preset('muted_plum', '차분한 보라', '로우 폴리 배경 · 낮고 넓은 독서창', {
+    readingMode: 'page',
+    spreadMode: 'single',
     ...night,
     ...image('muted-plum'),
     fontFamily: 'Freesentation',

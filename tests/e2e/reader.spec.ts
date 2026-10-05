@@ -410,8 +410,8 @@ test('terminal recommendations reserve reading space and wheel-up does not bounc
 for (const mode of ['scroll', 'page'] as const) {
   test(`automatic ${mode} resume starts completed episodes at the beginning and preserves manual bookmarks`, async () => {
     if (mode === 'page') {
-      await page.addInitScript(() => localStorage.setItem('viewer_paging', '1'));
-      await page.reload();
+      await updateReader({ readingMode: 'page' });
+      await expect(page.locator('[data-unp-reader="page"]')).toBeVisible();
     }
     const navigation = page.locator('#unp-navigation-host');
     await expect(navigation).toBeVisible();
@@ -478,9 +478,8 @@ for (const mode of ['scroll', 'page'] as const) {
 }
 
 test('a service-only final page finishes automatic recording without a text anchor', async () => {
-  await updateReader({ spreadMode: 'single', pageEffect: 'none' });
-  await page.addInitScript(() => localStorage.setItem('viewer_paging', '1'));
-  await page.reload();
+  await updateReader({ readingMode: 'page', spreadMode: 'single', pageEffect: 'none' });
+  await expect(page.locator('[data-unp-reader="page"]')).toBeVisible();
   await expect(page.locator('#unp-navigation-host')).toBeVisible();
   await expect(page.locator('#unp-navigation-host')).toHaveCSS('opacity', '1');
   await page.locator('#novel_drawing_page').evaluate((body) => {
@@ -1059,10 +1058,8 @@ test('content bookmarks survive typography, narrow layout, mode changes and relo
 test('legacy native bookmarks remain available until explicitly cleared', async () => {
   await page.evaluate(() => {
     localStorage.setItem('bookmark_1001', '3');
-    localStorage.setItem('viewer_paging', '1');
   });
-  await updateReader({ maxWidth: 540 });
-  await page.reload();
+  await updateReader({ maxWidth: 540, readingMode: 'page' });
   await expect(page.locator('#novel_drawing_page')).toHaveCSS('column-count', '2');
   await page
     .locator('#unp-navigation-host')
@@ -1086,9 +1083,7 @@ test('legacy native bookmarks remain available until explicitly cleared', async 
 });
 
 test('page mode contains native outer overflow without preventing page turns or scroll mode', async () => {
-  await page.evaluate(() => localStorage.setItem('viewer_paging', '1'));
-  await updateReader({ maxWidth: 540, pageEffect: 'slide' });
-  await page.reload();
+  await updateReader({ maxWidth: 540, pageEffect: 'slide', readingMode: 'page' });
   await expect(page.locator('#novel_drawing_page')).toHaveAttribute('data-unp-reader', 'page');
   // Match the native forced scrollbar and a small overflowing decoration at the
   // viewport edge, including the fractional layout seen with browser zoom.
@@ -1893,7 +1888,14 @@ test('ten preset cards show real samples and applying a card updates other readi
   const paper = presetCard(page, '종이');
   await paper.scrollIntoViewIfNeeded();
   await expect(paper.getByTestId('typography-preview')).toHaveCSS('font-size', '20px');
-  await paper.getByRole('button', { name: '종이 적용', exact: true }).click();
+  await Promise.all([
+    page.waitForEvent('load'),
+    paper.getByRole('button', { name: '종이 적용', exact: true }).click(),
+  ]);
+  await expect(page.locator('[data-unp-reader="page"]')).toBeVisible();
+  await expect(page.locator('#unp-navigation-host')).toHaveCSS('opacity', '1');
+  await openSettings();
+  await settingsSection(page, '프리셋');
   await expect(paper).toContainText('현재 사용 중');
   await expect(page.locator('.line[data-line="3"]')).toHaveCSS('font-size', '20px');
   await expect(optionsPreview).toHaveCSS('font-size', '20px');
@@ -1980,14 +1982,13 @@ test('page layout reflows and native service counters agree across spreads', asy
 
 test('adjustable page gaps preserve native final-page counts and navigation can overlay the paper', async () => {
   await page.setViewportSize({ width: 1600, height: 900 });
-  await page.evaluate(() => localStorage.setItem('viewer_paging', '1'));
   await updateReader({
+    readingMode: 'page',
     maxWidth: 540,
     horizontalPadding: 20,
     pageNavigationPlacement: 'reserved',
     pageEffect: 'none',
   });
-  await page.reload();
   const paper = page.locator('#novel_drawing_page_c');
   const body = page.locator('#novel_drawing_page');
   await expect(body).toHaveCSS('column-count', '2');
@@ -2035,11 +2036,7 @@ for (const mode of ['scroll', 'page'] as const) {
   for (const width of [1440, 390]) {
     test(`reading height centers the ${mode} viewport and navigation really overlays at ${width}px`, async () => {
       await page.setViewportSize({ width, height: 900 });
-      await page.evaluate(
-        (mode) => localStorage.setItem('viewer_paging', mode === 'page' ? '1' : '0'),
-        mode
-      );
-      await page.reload();
+      await updateReader({ readingMode: mode });
       await expect(page.locator(`[data-unp-reader="${mode}"]`)).toBeVisible();
       const frame = page.locator(mode === 'page' ? '#novel_drawing_page_c' : '#novel_box');
       const nav = page.getByRole('navigation', { name: '본문 탐색과 북마크' });

@@ -13,6 +13,66 @@ import {
 import { defaults } from '@/shared/model/preferences';
 import { memoryStorage } from '../../../../tests/helpers/storage';
 describe('preset storage and backups', () => {
+  it('saves reading mode and page options while old presets keep the live reading behavior', async () => {
+    const current = {
+      ...defaults,
+      readingMode: 'page' as const,
+      spreadMode: 'single' as const,
+      pageEffect: 'fold' as const,
+      pageNavigationPlacement: 'fixed' as const,
+    };
+    expect(
+      applyPresetSettings(current, findPreset('preset_builtin_paper')!.settings)
+    ).toMatchObject({
+      readingMode: 'page',
+      spreadMode: 'single',
+      pageEffect: 'fold',
+      pageNavigationPlacement: 'fixed',
+    });
+    const store = new PresetStore(memoryStorage().port);
+    await store.initialize();
+    const saved = await store.save('페이지 독서', '', current);
+    const imported = store.parseImport(store.export(current));
+    expect(imported.settings).toMatchObject(current);
+    expect(imported.presets[0]?.settings).toMatchObject({
+      readingMode: 'page',
+      spreadMode: 'single',
+      pageEffect: 'fold',
+      pageNavigationPlacement: 'fixed',
+    });
+    expect(applyPresetSettings(defaults, saved.settings)).toMatchObject(current);
+    expect(presetSettingsEqual({ ...current, readingMode: 'scroll' }, saved.settings)).toBe(false);
+    const legacy = store.parseImport(
+      JSON.stringify({
+        settings: { fontSize: 24 },
+        presets: [
+          {
+            id: 'old',
+            name: '기존',
+            description: '',
+            isDefault: false,
+            createdAt: 1,
+            settings: { fontSize: 24 },
+          },
+        ],
+      })
+    );
+    expect(applyPresetSettings(current, legacy.presets[0]!.settings)).toMatchObject({
+      readingMode: 'page',
+      spreadMode: 'single',
+      pageEffect: 'fold',
+      pageNavigationPlacement: 'fixed',
+      fontSize: 24,
+    });
+    expect(createPresetDraft(current, legacy.presets[0]).settings).toMatchObject({
+      readingMode: 'page',
+      spreadMode: 'single',
+    });
+    expect(new Set(builtInPresets.map((item) => item.settings.readingMode))).toEqual(
+      new Set(['scroll', 'page'])
+    );
+    store.dispose();
+  });
   it('round-trips paragraph spacing independently from blank lines and changes only the basic catalog appearance', async () => {
     const store = new PresetStore(memoryStorage().port);
     await store.initialize();
@@ -229,8 +289,9 @@ describe('preset storage and backups', () => {
       );
       expect(settings).toMatchObject({
         autoRecommend: true,
-        pageEffect: 'fold',
-        pageNavigationPlacement: 'fixed',
+        readingMode: scene.settings.readingMode,
+        pageEffect: scene.settings.pageEffect,
+        pageNavigationPlacement: scene.settings.pageNavigationPlacement,
       });
       await store.save(scene.name, '', settings);
       const exported = store.export(settings);

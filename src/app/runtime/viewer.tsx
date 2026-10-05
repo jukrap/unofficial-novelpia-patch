@@ -25,6 +25,7 @@ import { EpisodeListTheme, nativeModeEntry, reloadNotice } from '../ui/viewer-su
 import { trackReadingStatistics } from './reading-statistics';
 import type { ViewerPreparation } from './bootstrap';
 import { FirstDisplay } from './first-display';
+import { storedReadingMode } from './reading-mode';
 import { installUiFonts, loadUiFonts } from '@/shared/platform/ui-fonts';
 import { initializeUserFonts, subscribeFonts } from '@/shared/platform/user-fonts';
 
@@ -197,6 +198,18 @@ export function startViewer(isContextValid = hasExtensionContext, preparation?: 
       schedule();
     }
   };
+  const readingMode = storedReadingMode({
+    settings,
+    storage,
+    nativeState: () => state,
+    canApply: () =>
+      !disposed && sessionEnabled && settings.getSnapshot().settings.enabled && !switching,
+    apply: (mode) => onNative('mode', mode),
+    onError: (error) => {
+      nativeError = `읽기 방식을 적용하지 못했습니다. ${String(error)}`;
+      render();
+    },
+  });
   const syncDark = () => {
     if (!sessionEnabled || !settings.getSnapshot().settings.enabled || switching || syncingDark)
       return;
@@ -257,6 +270,7 @@ export function startViewer(isContextValid = hasExtensionContext, preparation?: 
       if (settings.getSnapshot().status === 'error') throw new Error(settings.getSnapshot().error);
       if (!enabled) {
         await restoreNativeDark();
+        await readingMode.restore();
       }
       if (reload) window.location.reload();
     } catch (error) {
@@ -574,6 +588,12 @@ export function startViewer(isContextValid = hasExtensionContext, preparation?: 
     if (!sessionEnabled) {
       preparation?.reveal();
       void restoreNativeDark().catch(() => {});
+      void readingMode
+        .restore()
+        .then((changed) => {
+          if (changed && !disposed) window.location.reload();
+        })
+        .catch(() => {});
       const advanced = document.getElementById('option_panel_2');
       if (advanced && nativeEntry !== advanced) {
         removeNativeEntry();
@@ -640,6 +660,8 @@ export function startViewer(isContextValid = hasExtensionContext, preparation?: 
           if (settings.getSnapshot().needsEffectMigration)
             settings.update({ pageEffect: value.animation ? 'fade' : 'none' });
           engine?.setAnimation(value.animation);
+          await readingMode.sync();
+          if (disposed || engine !== current) return;
           syncDark();
           await darkSync;
           if (disposed || engine !== current) return;
@@ -725,6 +747,7 @@ export function startViewer(isContextValid = hasExtensionContext, preparation?: 
           engine?.update(s);
           appliedSettings = s;
           syncDark();
+          void readingMode.sync();
         }
         schedule();
         const episode = location.pathname.match(/\/viewer\/(\d+)/)?.[1];
