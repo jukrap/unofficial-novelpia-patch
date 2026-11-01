@@ -1,197 +1,369 @@
 import { chromium, expect } from '@playwright/test';
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
-import { createServer } from 'node:http';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { viewerHtml } from '../tests/fixtures/viewer.mjs';
+import { artworkResources, posterHtml, promoHtml } from './store-artwork.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const output = path.join(root, 'store/assets');
-const extension = path.join(root, '.output/chrome-mv3-e2e');
+const rawOutput = path.join(root, 'test-results/store-captures');
+const extension = path.join(root, '.output/chrome-mv3');
 const manifest = JSON.parse(await readFile(path.join(extension, 'manifest.json'), 'utf8'));
-if (!manifest.content_scripts?.some((script) => script.matches.includes('http://127.0.0.1/*')))
-  throw new Error('Run pnpm run build:e2e before capturing synthetic store screenshots.');
-await mkdir(output, { recursive: true });
+if (!manifest.content_scripts?.some((s) => s.matches.includes('https://novelpia.com/viewer/*')))
+  throw new Error('Run pnpm run build: production MV3 is required for store captures.');
+await Promise.all([mkdir(output, { recursive: true }), mkdir(rawOutput, { recursive: true })]);
 
-// Original sample prose written for these screenshots. No novel is downloaded.
-// Only fixture content changes; extension DOM, styles and controls are untouched.
+// Original fictional prose. The fixture provides only the host page; the shipped
+// extension renders every reading surface, control, gallery and font preview.
 const paragraphs = [
-  '<b>창가의 기록</b>',
-  '비가 그친 오후, 오래된 책방의 창문으로 따뜻한 빛이 들어왔다. 나는 마지막으로 남은 의자를 당겨 앉았다.',
-  '책장을 펼치자 접어 둔 종이 한 장이 바닥으로 떨어졌다. 종이에는 작은 지도와 함께 짧은 문장이 적혀 있었다.',
-  '“길을 잃었다면, 가장 조용한 곳에서 다시 시작해.”',
-  '창밖으로 보이는 골목은 평소와 다르지 않았다. 빵집의 간판이 흔들리고, 학교에서 돌아오는 아이들의 웃음소리가 들렸다.',
-  '나는 <b>지도의 첫 번째 표시</b>를 손가락으로 짚었다. 책방 바로 옆, 아무도 들어가지 않던 작은 정원이었다.',
+  '비가 그친 뒤에야 우편함이 눈에 들어왔다.',
+  '골목 끝의 작은 책방 앞이었다. 어제까지 아무것도 없던 벽에 파란 우편함 하나가 걸려 있었다. 젖은 나무 냄새 사이로, 막 끓인 차의 향이 흘러나왔다.',
+  '“그 편지는 이름이 없는 사람에게만 와요.”',
+  '책방 주인이 문에 기대어 말했다. 나는 우편함에서 손을 떼고 돌아섰다. 그녀의 손에는 접힌 종이 대신 오래된 열쇠가 들려 있었다.',
+  '“제 이름을 모르시잖아요.”',
+  '“그러니까 아직 받을 수 있죠.”',
   '&nbsp;',
-  '문을 열자 젖은 흙 냄새가 났다. 담장 너머에는 생각보다 넓은 길이 이어져 있었다.',
-  '한 걸음씩 천천히 걸었다. 서두를 이유는 없었다. 오늘의 이야기는 이제 막 시작되고 있었으니까.',
-  '가끔 멈춰 서서 지나온 길을 돌아보았다. 익숙한 곳에도 아직 발견하지 못한 풍경이 남아 있었다.',
-  '나는 주머니에서 수첩을 꺼냈다. 잊고 싶지 않은 장면을 한 줄씩 적어 두기로 했다.',
+  '봉투에는 주소도 우표도 없었다. 대신 작은 등대가 그려져 있었다. 바다가 없는 이 도시에서 등대라니.',
+  '종이 속 불빛이 한 번 깜박였다.',
+  '잠깐의 착각이라고 하기에는 너무 선명했다. 주인은 놀라지도 않고 열쇠를 내 손에 쥐여 주었다. 손바닥에 닿은 금속은 햇볕을 받은 돌처럼 따뜻했다.',
+  '“<b>오늘 해가 지기 전에</b> 다녀와요. 늦으면 길이 조금 달라지거든.”',
+  '내가 다시 물으려는 순간, 책방 안쪽에서 종소리가 났다. 벽시계는 세 시를 가리켰지만 종은 여섯 번 울렸다.',
   '&nbsp;',
-  '길 끝에는 작은 벤치가 있었다. 먼저 도착한 고양이 한 마리가 햇볕 아래서 느긋하게 눈을 감고 있었다.',
-  '지도에 그려진 나무도 그곳에 있었다. 오래된 가지에는 종이로 만든 별들이 매달려 바람에 살랑거렸다.',
-  '별 하나를 펼쳐 보니 누군가의 소원이 적혀 있었다. 다른 별에는 여행에서 돌아온 사람이 남긴 짧은 인사가 있었다.',
-  '나는 빈 종이를 골라 오늘 발견한 풍경을 적었다. 그리고 가장 낮은 가지에 조심스럽게 걸어 두었다.',
+  '책장 사이에는 어른 한 사람이 겨우 지날 만한 문이 있었다. 열쇠를 넣자 문틈으로 소금기 어린 바람이 밀려왔다.',
+  '문 너머의 계단은 아래로 이어졌다. 나는 봉투를 주머니 깊이 넣고 첫 번째 돌계단을 밟았다. 신발 아래에서 모래가 작게 바스러졌다.',
+  '낮게 깔린 구름 아래로 바다가 보였다.',
+  '방금 전까지 빗물 고인 골목에 서 있었는데, 이제는 파도 소리가 귓가를 채웠다. 멀리 등대 하나가 흰 선처럼 서 있었다. 봉투에 그려진 것과 같은 등대였다.',
+  '나는 뒤를 돌아보았다. 책방 문은 아직 거기에 있었다. 주인은 문가에 작은 의자를 가져다 놓고 책을 펴고 있었다.',
+  '“돌아갈 길은 기억하지 않아도 돼요.”',
+  '그녀는 책에서 눈을 떼지 않은 채 덧붙였다.',
+  '“돌아오고 싶은 이유만 잊지 않으면.”',
   '&nbsp;',
-  '책방으로 돌아왔을 때에는 창가에 긴 그림자가 드리워져 있었다. 펼쳐 둔 책은 여전히 같은 페이지에서 나를 기다리고 있었다.',
+  '해변에는 발자국이 하나도 없었다. 멀리서 누군가 손을 흔드는 것 같았다. 나는 편지를 다시 꺼냈다. 비어 있던 봉투 위에, 조금 전에는 없던 문장이 천천히 나타나고 있었다.',
+  '기다리고 있었습니다.',
+  '이상하게도 무섭지는 않았다. 나는 젖은 소매를 걷고 등대 쪽으로 걸었다. 처음 보는 길인데도 오래전에 약속한 장소를 찾아가는 기분이었다.',
+  '파도는 내 걸음보다 조금 느리게 밀려왔다. 그 속도에 맞추어 걷다 보니, 멀리 있던 불빛이 어느새 손에 잡힐 듯 가까워져 있었다.',
 ];
 const fixture = viewerHtml()
   .replace(
     /function textLines\(\)\{[\s\S]*?\}\r?\nfunction viewer_display/,
-    `function textLines(){return Array.from({length:120},(_,i)=>${JSON.stringify(paragraphs)}[i%${paragraphs.length}]);}\nfunction viewer_display`
+    `function textLines(){return Array.from({length:104},(_,i)=>${JSON.stringify(paragraphs)}[i%${paragraphs.length}]);}\nfunction viewer_display`
   )
-  .replace('회귀 테스트 · 합성 본문', '창가의 기록 · 합성 체험 본문')
-  .replace('보존해야 하는 테스트 광고', '서비스 영역 · 합성 예시');
-
-const server = createServer((_request, response) => {
-  response.setHeader('Content-Type', 'text/html; charset=utf-8');
-  response.end(fixture);
-});
-await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
-const base = `http://127.0.0.1:${server.address().port}`;
+  .replace('회귀 테스트 · 합성 본문', '이름 없는 편지 · 촬영용 예시')
+  // Keep the fixture's service marker in its native footer, outside the reader capture.
+  .replace(
+    '#test-banner{position:fixed;right:2px;bottom:60px;',
+    '#test-banner{position:fixed;right:2px;bottom:0px;'
+  )
+  .replace('보존해야 하는 테스트 광고', '서비스 영역');
 const profile = await mkdtemp(path.join(tmpdir(), 'unp-store-assets-'));
 let context;
 const errors = [];
+const images = [];
+const resources = await artworkResources(root);
+async function removeCaptureProfile() {
+  const resolved = path.resolve(profile);
+  if (!resolved.startsWith(path.join(path.resolve(tmpdir()), 'unp-store-assets-')))
+    throw new Error('Unexpected profile path');
+  await rm(resolved, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
+}
 try {
   context = await chromium.launchPersistentContext(profile, {
     channel: 'chromium',
     headless: true,
-    viewport: { width: 1280, height: 800 },
+    viewport: { width: 1280, height: 900 },
     deviceScaleFactor: 1,
     reducedMotion: 'reduce',
     args: [`--disable-extensions-except=${extension}`, `--load-extension=${extension}`],
   });
+  // Production match patterns are exercised without fetching any real novel.
+  await context.route('https://novelpia.com/viewer/**', (route) =>
+    route.fulfill({
+      contentType: 'text/html; charset=utf-8',
+      body: fixture,
+    })
+  );
+  // These are the exact shipped Freesentation faces, not a substitute font.
+  await context.route(
+    /https:\/\/cdn\.jsdelivr\.net\/gh\/Freesentation\/.*\.woff2$/,
+    async (route) => {
+      const filename = new URL(route.request().url()).pathname.split('/').at(-1);
+      await route.fulfill({
+        contentType: 'font/woff2',
+        body: await readFile(path.join(root, 'public/fonts', filename)),
+        headers: { 'Access-Control-Allow-Origin': '*' },
+      });
+    }
+  );
   context.on('page', (page) => page.on('pageerror', (error) => errors.push(error.message)));
   const worker = context.serviceWorkers()[0] ?? (await context.waitForEvent('serviceworker'));
-  const extensionId = new URL(worker.url()).host;
+  const id = new URL(worker.url()).host;
   const options = await context.newPage();
-  await options.goto(`chrome-extension://${extensionId}/options.html`);
+  await options.goto(`chrome-extension://${id}/options.html#/home`);
   await expect(options.getByTestId('management-page')).toBeVisible();
-
+  const defaults = await worker.evaluate(
+    async () => (await chrome.storage.sync.get('unp.reader.v1'))['unp.reader.v1'].data
+  );
   async function settings(patch) {
-    await worker.evaluate(async (patch) => {
-      const key = 'unp.reader.v1';
-      const stored = (await chrome.storage.sync.get(key))[key];
-      await chrome.storage.sync.set({
-        [key]: { schemaVersion: 1, data: { ...stored?.data, ...patch } },
-      });
-    }, patch);
+    await worker.evaluate(
+      async (data) => chrome.storage.sync.set({ 'unp.reader.v1': { schemaVersion: 1, data } }),
+      {
+        ...defaults,
+        fontFamily: 'Freesentation',
+        fontSize: 20,
+        fontWeight: 400,
+        boldTextStyle: 'none',
+        lineHeight: 175,
+        paragraphSpacing: 18,
+        paragraphGap: 7,
+        autoRecommend: false,
+        pageEffect: 'none',
+        pageNavigationPlacement: 'fixed',
+        ...patch,
+      }
+    );
   }
   async function settled(page) {
     await page.evaluate(async () => {
       await document.fonts.ready;
-      await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
     });
-    await expect(page.locator('[role="alert"]')).toHaveCount(0);
+    await expect(page.getByRole('alert')).toHaveCount(0);
   }
-  async function capture(page, filename) {
+  async function reader(patch, width = 1200, height = 730) {
+    await settings(patch);
+    const page = await context.newPage();
+    await page.setViewportSize({ width, height });
+    await page.goto('https://novelpia.com/viewer/1001?terminal');
+    await expect(page.locator(`[data-unp-reader="${patch.readingMode}"]`)).toBeVisible();
+    await expect(page.locator('html[data-unp-preparing]')).toHaveCount(0, { timeout: 15000 });
+    await expect(page.locator('[data-unp-reader] .line').first()).toHaveCSS(
+      'visibility',
+      'visible'
+    );
+    await expect(page.locator('#unp-reader-loading')).toHaveCount(0);
+    await expect(page.locator('#unp-navigation-host')).toHaveCSS('opacity', '1');
     await settled(page);
-    await page.mouse.move(1260, 780);
-    await page.screenshot({ path: path.join(output, filename), animations: 'disabled' });
-    console.log(`${filename}: 1280x800`);
+    return page;
+  }
+  async function raw(page, name, clip) {
+    const bytes = await page.screenshot({ ...(clip ? { clip } : {}), animations: 'disabled' });
+    await writeFile(path.join(rawOutput, name), bytes);
+    return bytes;
+  }
+  async function readingScene(page, name, surround = 0) {
+    const paper = await page.locator('#novel_drawing_page_c').boundingBox();
+    const navigation = await page.locator('#unp-navigation-host').boundingBox();
+    if (!paper || !navigation) throw new Error('Reading scene is not ready');
+    const left = Math.min(paper.x, navigation.x) - 8 - surround;
+    const top = Math.min(paper.y, navigation.y) - 8;
+    const right = Math.max(paper.x + paper.width, navigation.x + navigation.width) + 8 + surround;
+    const bottom = Math.max(paper.y + paper.height, navigation.y + navigation.height) + 8;
+    const clip = { x: left, y: top, width: right - left, height: bottom - top };
+    const viewport = page.viewportSize();
+    if (left < 0 || top < 0 || right > viewport.width || bottom > viewport.height)
+      throw new Error('Reading scene would be clipped');
+    const marker = await page.locator('#test-banner').boundingBox();
+    if (
+      marker &&
+      marker.x < right &&
+      marker.x + marker.width > left &&
+      marker.y < bottom &&
+      marker.y + marker.height > top
+    )
+      throw new Error('Fixture service marker overlaps the reader capture');
+    return raw(page, name, clip);
+  }
+  async function poster(name, config) {
+    const page = await context.newPage();
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.setContent(posterHtml(resources, config));
+    await page.evaluate(async () => {
+      await document.fonts.ready;
+      await Promise.all([...document.images].map((image) => image.decode()));
+    });
+    await page.screenshot({ path: path.join(output, name) });
+    images.push(name);
+    await page.close();
   }
 
-  await settings({
-    fontFamily: 'system-ui',
-    fontSize: 20,
-    lineHeight: 180,
-    paragraphGap: 8,
-    paragraphSpacing: 24,
-    maxWidth: 880,
-    horizontalPadding: 32,
-    verticalPadding: 24,
-    pageNavigationPlacement: 'fixed',
-    backgroundColor: '#F4F1F8',
-    textAreaBackgroundColor: '#FFFFFF',
-    textAreaOpacity: 100,
-    textColor: '#282330',
-    darkMode: false,
-    autoRecommend: false,
-  });
-  const scroll = await context.newPage();
-  await scroll.addInitScript(() => localStorage.setItem('viewer_paging', '0'));
-  await scroll.goto(`${base}/viewer/1001`);
-  await expect(scroll.locator('[data-unp-reader="scroll"]')).toBeVisible();
-  await expect(scroll.locator('html')).not.toHaveAttribute('data-unp-preparing');
-  await scroll.locator('#btn_theme').click();
-  await expect(scroll.getByTestId('settings-panel')).toBeVisible();
-  await capture(scroll, '01-reading-settings.png');
-  await scroll.close();
-
-  await settings({
-    maxWidth: 540,
-    horizontalPadding: 32,
-    verticalPadding: 24,
-    pageGap: 32,
+  const spread = await reader({
+    readingMode: 'page',
     spreadMode: 'auto',
-    backgroundColor: '#E8E2D8',
-    textAreaBackgroundColor: '#F7F3E9',
-    textColor: '#483D32',
+    maxWidth: 530,
+    horizontalPadding: 38,
+    verticalPadding: 28,
+    pageGap: 32,
     readerHeightPercent: 100,
+    backgroundColor: '#E9E2D6',
+    textAreaBackgroundColor: '#FFFBF2',
+    textColor: '#433A30',
+    textAreaOpacity: 100,
   });
-  const spread = await context.newPage();
-  await spread.addInitScript(() => localStorage.setItem('viewer_paging', '1'));
-  await spread.goto(`${base}/viewer/1002?terminal`);
-  await expect(spread.locator('[data-unp-reader="page"]')).toBeVisible();
-  await expect(spread.locator('#novel_drawing_page')).toHaveCSS('column-count', '2');
-  await expect(spread.locator('html')).not.toHaveAttribute('data-unp-preparing');
-  await expect(spread.locator('#unp-navigation-host')).toBeVisible();
-  await capture(spread, '02-two-page-reading.png');
+  await expect(spread.locator('[data-unp-reader]')).toHaveCSS('column-count', '2');
+  const spreadImage = await readingScene(spread, 'reading.png');
+  await poster('01-reading.png', {
+    label: '01 / 읽기 방식',
+    title: '읽는 방식부터, 내 취향대로.',
+    description: '익숙한 스크롤도, 책처럼 펼친 두 쪽도. 화면에 맞는 너비와 여백을 찾아보세요.',
+    image: spreadImage,
+  });
   await spread.close();
 
-  await settings({ darkMode: true });
-  await options
-    .getByRole('navigation', { name: '관리 항목' })
-    .getByRole('button', { name: '프리셋', exact: true })
-    .click();
-  await expect(options.getByRole('article', { name: '기본', exact: true })).toBeVisible();
-  await capture(options, '03-presets.png');
+  const text = await reader(
+    {
+      readingMode: 'scroll',
+      maxWidth: 900,
+      backgroundColor: '#F2EDF8',
+      textAreaBackgroundColor: '#FFFFFF',
+      textColor: '#25212D',
+      darkMode: false,
+    },
+    1200,
+    960
+  );
+  await text.locator('#btn_theme').click();
+  await expect(text.getByTestId('settings-panel')).toBeVisible();
+  await settled(text);
+  const panelImage = await text
+    .getByTestId('settings-panel')
+    .screenshot({ animations: 'disabled' });
+  await writeFile(path.join(rawOutput, 'typography.png'), panelImage);
+  await poster('02-typography.png', {
+    aside: true,
+    label: '02 / 글꼴과 간격',
+    title: '한 줄의 길이도,<br>문장의 호흡도.',
+    description:
+      '글꼴과 두께부터<br>줄·문단·빈 줄 간격까지.<br><br>미리 보며 조절하고,<br>바로 읽어보세요.',
+    image: panelImage,
+  });
+  await text.close();
 
-  // A separate marketing tile uses the shipped brand icon and bundled UI font.
-  // It is not presented as an application screenshot.
-  const icon = await readFile(path.join(root, 'public/icons/icon192.png'));
-  const font = await readFile(path.join(root, 'public/fonts/Freesentation-7Bold.woff2'));
+  await settings({ darkMode: true, readingMode: 'scroll' });
+  await options.setViewportSize({ width: 1300, height: 1100 });
+  await options.goto(`chrome-extension://${id}/options.html#/presets`);
+  const first = options.getByRole('article', { name: '밝은 돌빛', exact: true });
+  await first.scrollIntoViewIfNeeded();
+  const cards = ['밝은 돌빛', '옅은 녹색', '짙은 청회색', '차분한 보라'].map((name) =>
+    options.getByRole('article', { name, exact: true })
+  );
+  for (const card of cards) {
+    await card.scrollIntoViewIfNeeded();
+    await expect(card.locator('.preview-image-layer')).toHaveCSS('opacity', '1');
+  }
+  await first.scrollIntoViewIfNeeded();
+  await settled(options);
+  const boxes = await Promise.all(cards.map((card) => card.boundingBox()));
+  const left = Math.min(...boxes.map((b) => b.x)),
+    top = Math.min(...boxes.map((b) => b.y));
+  const right = Math.max(...boxes.map((b) => b.x + b.width)),
+    bottom = Math.max(...boxes.map((b) => b.y + b.height));
+  const gallery = await raw(options, 'presets.png', {
+    x: left,
+    y: top,
+    width: right - left,
+    height: bottom - top,
+  });
+  await poster('03-presets.png', {
+    dark: true,
+    aside: true,
+    label: '03 / 프리셋',
+    title: '편한 설정을<br>찾았다면,<br>저장해두세요.',
+    description:
+      '10가지 기본 프리셋에서 시작해<br>내 설정으로 편집하고 복제하세요.<br><br>읽기 방식과 배치도<br>함께 기억합니다.',
+    image: gallery,
+  });
+
+  const imageReader = await reader({
+    readingMode: 'page',
+    spreadMode: 'single',
+    maxWidth: 740,
+    horizontalPadding: 52,
+    verticalPadding: 30,
+    readerHeightPercent: 85,
+    darkMode: true,
+    textColor: '#F3EDF7',
+    backgroundColor: '#322B40',
+    textAreaBackgroundColor: '#211C2A',
+    textAreaOpacity: 92,
+    backgroundType: 'image',
+    backgroundImageSource: 'builtin',
+    backgroundAssetId: 'muted-plum',
+    overlayOpacity: 0,
+  });
+  await expect(imageReader.locator('[data-unp-background]')).toHaveCSS('opacity', '1');
+  const backgroundImage = await readingScene(imageReader, 'background.png', 120);
+  await poster('04-backgrounds.png', {
+    dark: true,
+    label: '04 / 색상과 배경',
+    title: '오늘의 이야기에 어울리는 분위기.',
+    description: '밝게, 어둡게, 또는 내 이미지로. 본문과 바깥 배경은 따로 조절하세요.',
+    image: backgroundImage,
+  });
+  await imageReader.close();
+
+  await settings({ darkMode: false, readingMode: 'scroll' });
+  await options.setViewportSize({ width: 1240, height: 900 });
+  await options.goto(`chrome-extension://${id}/options.html#/fonts`);
+  await options
+    .getByLabel('사용자 글꼴 파일', { exact: true })
+    .setInputFiles([
+      path.join(root, 'public/fonts/Freesentation-4Regular.woff2'),
+      path.join(root, 'public/fonts/Freesentation-7Bold.woff2'),
+    ]);
+  await expect(options.locator('.font-family-editor')).toHaveCount(1);
+  await options.getByRole('textbox', { name: '표시 이름', exact: true }).fill('나의 프리젠테이션');
+  await options.getByRole('button', { name: '글꼴 저장', exact: true }).click();
+  await expect(options.locator('.registered-font h3')).toHaveText('나의 프리젠테이션');
+  await options.getByRole('button', { name: '알림 닫기', exact: true }).click();
+  await settled(options);
+  const fontImage = await options
+    .locator('.management-content')
+    .screenshot({ animations: 'disabled' });
+  await writeFile(path.join(rawOutput, 'fonts.png'), fontImage);
+  await poster('05-user-fonts.png', {
+    aside: true,
+    label: '05 / 사용자 글꼴',
+    title: '좋아하는 글꼴을<br>가져오세요.',
+    description:
+      '이름과 지원 두께를 읽어<br>하나의 글꼴로 정리합니다.<br><br>등록 파일은<br>이 브라우저에 보관됩니다.',
+    image: fontImage,
+    inset: true,
+  });
+
   const tile = await context.newPage();
   await tile.setViewportSize({ width: 440, height: 280 });
-  await tile.setContent(`<!doctype html><html lang="ko"><meta charset="utf-8"><title>Novelpia Patch promo</title><style>
-    @font-face{font-family:UI;src:url(data:font/woff2;base64,${font.toString('base64')});font-weight:700}
-    *{box-sizing:border-box}body{margin:0;background:#251e34;color:#f6f2ff;font-family:UI,sans-serif}
-    main{width:440px;height:280px;padding:28px 32px;display:flex;flex-direction:column;justify-content:space-between}
-    header{display:flex;gap:16px;align-items:center}img{width:70px;height:70px}h1{font-size:30px;line-height:1.03;margin:0;letter-spacing:-.5px}small{display:block;color:#c5b5e0;font-size:12px;margin-top:7px}
-    p{font-size:23px;line-height:1.4;margin:0;letter-spacing:-.4px}footer{color:#cabbe2;font-size:15px;border-top:1px solid #4b3e60;padding-top:13px}
-    </style><main><header><img alt="" src="data:image/png;base64,${icon.toString('base64')}"><div><h1>Novelpia Patch</h1><small>COMMUNITY EXTENSION</small></div></header><p>내게 편안한 글꼴과 간격으로,<br>이야기에 집중하세요.</p><footer>글꼴 · 프리셋 · 스크롤과 페이지 읽기</footer></main></html>`);
-  await tile.evaluate(() => document.fonts.ready);
+  await tile.setContent(promoHtml(resources));
+  await tile.evaluate(async () => {
+    await document.fonts.ready;
+    await Promise.all([...document.images].map((image) => image.decode()));
+  });
   await tile.screenshot({ path: path.join(output, 'promo-440x280.png') });
-  console.log('promo-440x280.png: 440x280');
+  images.push('promo-440x280.png');
   if (errors.length) throw new Error(`Capture runtime errors: ${errors.join('; ')}`);
-  const filenames = [
-    '01-reading-settings.png',
-    '02-two-page-reading.png',
-    '03-presets.png',
-    'promo-440x280.png',
-  ];
-  for (const filename of filenames) {
+  for (const filename of images) {
     const bytes = await readFile(path.join(output, filename));
     const expected = filename.startsWith('promo-') ? [440, 280] : [1280, 800];
     if (bytes.readUInt32BE(16) !== expected[0] || bytes.readUInt32BE(20) !== expected[1])
-      throw new Error(`Unexpected screenshot dimensions: ${filename}`);
+      throw new Error(`Invalid dimensions: ${filename}`);
   }
   await writeFile(
-    path.join(output, 'README.md'),
-    `# 스토어 등록 이미지\n\n버전 ${manifest.version}의 실제 확장을 격리된 MV3 Chromium에서 촬영했습니다.\n\n- \`01-reading-settings.png\`: 스크롤 읽기에서 연 테마박스, 1280×800\n- \`02-two-page-reading.png\`: 두 쪽 페이지 읽기와 진행바, 1280×800\n- \`03-presets.png\`: 설정 페이지의 실제 프리셋 갤러리, 1280×800\n- \`promo-440x280.png\`: 배포 아이콘과 동봉 글꼴로 조합한 홍보 이미지, 440×280\n\n세 기능 화면은 합성 본문과 서비스 UI fixture에 확장을 실행한 화면입니다. 노벨피아 작품·계정 정보·실제 광고를 수집하지 않았습니다. 본문은 촬영용으로 작성했으며 원사이트 디자인을 정확히 재현한 화면은 아닙니다. 홍보 이미지를 제외한 기능 화면에는 합성된 UI나 사후 보정을 넣지 않았습니다.\n\n## 다시 만들기\n\n프로젝트 의존성과 Playwright Chromium 설치 후 저장소 루트에서 실행합니다.\n\n\`\`\`sh\npnpm run build:e2e\nnode scripts/store-assets.mjs\n\`\`\`\n\n결과는 이 디렉터리에만 저장합니다. 브라우저 프로필은 임시 폴더에 만들고 종료 시 삭제합니다. UI 글꼴은 확장에 동봉된 파일을 사용하며, 프리셋의 독서용 웹글꼴은 앱의 실제 로더가 요청합니다. 네트워크 실패 시 대체 글꼴이 보일 수 있으므로 생성 후 화면을 확인해야 합니다. 이 자료는 심사 제출이나 승인을 의미하지 않습니다.\n`,
-    'utf8'
+    path.join(rawOutput, 'capture.json'),
+    JSON.stringify(
+      {
+        version: manifest.version,
+        images,
+        errors,
+        source:
+          'Production MV3, synthetic prose, unedited UI captures with external marketing framing',
+      },
+      null,
+      2
+    )
   );
+  console.log(JSON.stringify({ version: manifest.version, images, errors }, null, 2));
 } finally {
   await context?.close();
-  server.closeAllConnections();
-  await new Promise((resolve) => server.close(resolve));
-  await removeTemporaryProfile(profile);
-}
-
-async function removeTemporaryProfile(profile) {
-  const resolved = path.resolve(profile);
-  const prefix = path.join(path.resolve(tmpdir()), 'unp-store-assets-');
-  if (!resolved.startsWith(prefix)) throw new Error('Unexpected temporary profile path');
-  await rm(resolved, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
+  await removeCaptureProfile();
 }

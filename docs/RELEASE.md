@@ -2,6 +2,34 @@
 
 현재는 비공개 저장소 검토와 Chrome 웹 스토어 최초 등록 준비 단계입니다. GitHub Actions와 스토어 자동 제출은 꺼져 있습니다. 이 문서는 구성과 활성화 절차이며 실제 심사·공개 완료 기록이 아닙니다.
 
+## 무엇이 자동으로 실행되나요?
+
+```text
+작업 PR → develop → 릴리스 PR → main
+                               ├─ Linux: 검사·빌드·ZIP 검증
+                               └─ Windows: MV3 브라우저 회귀
+                                   ↓ 모두 성공
+                              GitHub Release
+                                   ↓ 제출 활성화 시
+                              Chrome 웹 스토어 심사
+                                   ↓ Google 승인
+                              공개·브라우저 업데이트
+```
+
+**GitHub Actions**가 작업을 실행하고, **Google Cloud의 IAM·Workload Identity Federation**은 그 작업이 스토어에 제출할 수 있도록 짧게 유효한 인증을 제공합니다. **Chrome 웹 스토어**가 심사와 사용자 배포를 맡습니다. Cloud 서버를 띄우거나 확장 이용자의 요청을 Cloud로 중계하는 구조가 아닙니다.
+
+첫 항목 생성은 대시보드에서 한 번 필요합니다. 현재 제출 스크립트는 이미 만들어진 항목의 조회·업데이트·심사 요청을 처리합니다. [첫 등록 순서](../store/FIRST_SUBMISSION.md)를 마치기 전에 자동 제출을 켜지 않습니다.
+
+## 비용을 발생시키지 않는 운영 기준
+
+- Cloud 프로젝트에는 결제 계정을 연결하지 않고, VM·Cloud Build·유료 저장소를 만들지 않습니다. 이 구성에 사용하는 [IAM·Workload Identity Federation은 별도 요금 없이 제공](https://cloud.google.com/products/iam)됩니다.
+- 공개 저장소에서는 [표준 GitHub 호스팅 실행기의 실행 시간은 무료](https://docs.github.com/en/billing/concepts/product-billing/github-actions)입니다. 유료 큰 실행기는 사용하지 않습니다.
+- 비공개 저장소에는 무료 사용량 한도가 있고 초과 사용·산출물 저장에 요금이 생길 수 있습니다. 무료 사용량과 **한도 초과 시 사용 중지** 설정을 확인하기 전에는 Actions와 `CI_PRIVATE_ENABLED`를 켜지 않습니다. 예산 알림만 설정하는 것은 사용 차단과 다릅니다.
+- 캐시의 유료 추가 용량을 활성화하지 않습니다. CI 임시 산출물은 짧게 보관하고 배포본은 GitHub Release에 둡니다.
+- 이미 납부한 Chrome 웹 스토어 개발자 등록비와 이 파이프라인의 운영 비용은 별개입니다.
+
+설정이 바뀌면 비용 조건도 다시 확인합니다. 저장소가 비공개인 채로 자동 실행을 켜고 무조건 무료라고 가정하지 않습니다.
+
 ## 브랜치 보호 활성화
 
 `.github/rulesets/`는 main·develop의 PR, 필수 검사, 강제 push·삭제 금지 규칙입니다. main에는 같은 저장소 develop의 PR만 허용하는 `PR policy` 검사도 필요합니다. 관리자가 한 명이므로 별도의 승인 1회를 요구하지 않습니다.
@@ -52,7 +80,7 @@ Actions 자체가 비활성 상태면 먼저 저장소 설정에서 활성화해
 ## 릴리스 순서
 
 1. main의 변경을 PR로 develop에 동기화합니다.
-2. develop의 릴리스 준비 PR에서 package.json·lockfile 버전과 CHANGELOG를 갱신합니다. 버전은 증가하는 `x.y.z`, 변경 이력 제목은 `## [x.y.z] - YYYY-MM-DD`입니다.
+2. develop의 릴리스 준비 PR에서 package.json 버전과 CHANGELOG를 갱신합니다. pnpm 잠금 파일에는 프로젝트 버전이 없으므로 의존성이 바뀔 때 갱신합니다. 버전은 증가하는 `x.y.z`, 변경 이력 제목은 `## [x.y.z] - YYYY-MM-DD`입니다.
 3. develop → main PR에서 검사와 변경 내용을 확인하고 merge commit으로 병합합니다.
 4. Linux 검증·빌드와 Windows MV3 회귀가 통과하면 검증한 ZIP·SHA256SUMS·release.json을 GitHub Release에 올립니다.
 5. `CWS_SUBMIT_ENABLED=true`인 경우에만 같은 ZIP을 스토어에 올리고 심사를 요청합니다. 승인이 나면 공개되며 브라우저 업데이트는 Chrome의 배포 일정에 따릅니다.
