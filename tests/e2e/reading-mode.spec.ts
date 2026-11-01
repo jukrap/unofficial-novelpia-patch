@@ -3,7 +3,7 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import http from 'node:http';
-import { launchReadingContext } from '../helpers/reading-font-fixture';
+import { launchReadingContext, closeReadingContext } from '../helpers/reading-font-fixture';
 // @ts-expect-error Synthetic text only.
 import { viewerHtml } from '../fixtures/viewer.mjs';
 let context: BrowserContext, viewer: Page, options: Page, profile: string, base: string;
@@ -53,7 +53,7 @@ test.beforeEach(async () => {
   );
 });
 test.afterEach(async () => {
-  await context?.close();
+  await closeReadingContext(context);
   server.closeAllConnections();
   await new Promise<void>((resolve) => server.close(() => resolve()));
   if (path.resolve(profile).startsWith(path.join(tmpdir(), 'unp-reading-mode-')))
@@ -97,7 +97,7 @@ test('options mode and page choices survive revisiting, browser restart and a ch
   await viewer.goto(`${base}/viewer/1002`);
   await ready('page');
   await viewer.evaluate(() => localStorage.setItem('viewer_paging', '0'));
-  await context.close();
+  await closeReadingContext(context);
   context = await launch();
   viewer = await context.newPage();
   await viewer.goto(`${base}/viewer/1002`);

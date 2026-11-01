@@ -1,4 +1,4 @@
-import { launchReadingContext } from '../helpers/reading-font-fixture';
+import { launchReadingContext, closeReadingContext } from '../helpers/reading-font-fixture';
 import { test, expect, type BrowserContext } from '@playwright/test';
 import { cp, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -78,7 +78,7 @@ for (const mode of ['scroll', 'page'] as const) {
             await chrome.storage.sync.set({ 'unp.reader.v1': doc });
           });
         // Close the whole browser, not just this tab. Reopen the same persistent profile.
-        await context.close();
+        await closeReadingContext(context);
         context = undefined;
         const esm = path.join(extension, 'content-scripts/esm');
         const moduleFile = path.join(
@@ -133,7 +133,7 @@ for (const mode of ['scroll', 'page'] as const) {
           })
         ).toBe(23);
       } finally {
-        await context?.close();
+        await closeReadingContext(context);
         server.closeAllConnections();
         await new Promise<void>((resolve) => server.close(() => resolve()));
         if (directory.startsWith(path.join(tmpdir(), 'unp-restart-')))

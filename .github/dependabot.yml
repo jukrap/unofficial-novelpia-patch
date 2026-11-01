@@ -4,6 +4,9 @@ updates:
     directory: /
     schedule:
       interval: weekly
+      day: monday
+      time: '02:00'
+      timezone: Asia/Seoul
     target-branch: develop
     labels: [dependencies, 'area: tooling']
     open-pull-requests-limit: 3
@@ -15,16 +18,23 @@ updates:
       - dependency-name: typescript
         update-types: ['version-update:semver-major']
     groups:
-      eslint-tooling:
-        patterns:
-          - eslint
-          - '@eslint/js'
-          - '@typescript-eslint/*'
-          - eslint-config-prettier
+      runtime-compatible:
+        dependency-type: production
+        update-types: [minor, patch]
+      tooling-compatible:
+        dependency-type: development
+        update-types: [minor, patch]
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
+      day: monday
+      time: '02:00'
+      timezone: Asia/Seoul
     target-branch: develop
     labels: [dependencies, 'area: tooling']
-    open-pull-requests-limit: 3
+    open-pull-requests-limit: 2
+    groups:
+      actions-compatible:
+        patterns: ['*']
+        update-types: [minor, patch]

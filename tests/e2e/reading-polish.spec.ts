@@ -1,5 +1,6 @@
 import {
   launchReadingContext,
+  closeReadingContext,
   readingFontCss,
   readingFontUrl,
 } from '../helpers/reading-font-fixture';
@@ -54,7 +55,7 @@ test.beforeEach(async () => {
   extensionId = new URL(worker.url()).host;
 });
 test.afterEach(async () => {
-  await context.close();
+  await closeReadingContext(context);
   if (profile.startsWith(path.join(tmpdir(), 'unp-reading-polish-')))
     await rm(profile, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
 });

@@ -3,7 +3,7 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import http from 'node:http';
-import { launchReadingContext } from '../helpers/reading-font-fixture';
+import { launchReadingContext, closeReadingContext } from '../helpers/reading-font-fixture';
 // @ts-expect-error Synthetic text only.
 import { viewerHtml } from '../fixtures/viewer.mjs';
 
@@ -164,7 +164,7 @@ for (const width of [1920, 390]) {
       ).toHaveAttribute('aria-pressed', 'true');
       expect(errors).toEqual([]);
     } finally {
-      await context?.close();
+      await closeReadingContext(context);
       server.closeAllConnections();
       await new Promise<void>((resolve) => server.close(() => resolve()));
       if (path.resolve(profile).startsWith(path.join(tmpdir(), 'unp-preset-layouts-')))

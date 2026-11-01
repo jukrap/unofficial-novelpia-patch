@@ -1,5 +1,6 @@
 import { defineConfig } from '@playwright/test';
 export default defineConfig({
+  globalSetup: './tests/helpers/qa-setup.ts',
   testDir: './tests/e2e',
   testMatch: process.env.UNP_FONTS_LIVE
     ? 'font-catalog-live.spec.ts'
@@ -26,10 +27,12 @@ export default defineConfig({
         ],
   timeout: 60000,
   expect: { timeout: 10000 },
-  workers: 1,
-  reporter: 'list',
+  workers: process.env.UNP_LIVE || process.env.UNP_FONTS_LIVE ? 1 : 2,
+  retries: 0,
+  maxFailures: process.env.CI ? 1 : undefined,
+  reporter: [['list'], ['./tests/helpers/qa-reporter.ts']],
   // Live pages may contain copyrighted novel text; never upload this directory in public CI.
   outputDir:
-    process.env.UNP_LIVE && !process.env.UNP_FONTS_LIVE ? '_reference/live' : 'test-results',
+    process.env.UNP_LIVE && !process.env.UNP_FONTS_LIVE ? '_reference/live' : '.output/qa/results',
   use: { trace: 'retain-on-failure', screenshot: 'only-on-failure' },
 });
