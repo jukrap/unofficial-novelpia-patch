@@ -2,6 +2,7 @@ import type { Settings } from '@/shared/model/preferences';
 import type { NativeClient } from '@/shared/platform/native';
 import { emphasisHighlight, emphasisShadow } from '@/shared/config/emphasis';
 import { captureAnchor, rangeForAnchor, type ReadingAnchor } from './anchor';
+import type { AutomaticPosition } from './automatic-position';
 import { pageGeometry, countPages, COLUMN_GAP, type Geometry } from '../lib/geometry';
 import { fontFamily, FontLoader, effectiveWeight, authorWeight } from '../lib/fonts';
 import { StyleLedger } from '../lib/ledger';
@@ -92,7 +93,7 @@ export class ReaderEngine {
     readonly roots: ReaderRoots,
     settings: Settings,
     private native: NativeClient,
-    private saveAnchor: (anchor: ReadingAnchor) => void,
+    private saveAnchor: (anchor: AutomaticPosition, progress: number) => void,
     resources?: { fonts: FontLoader }
   ) {
     this.fonts = resources?.fonts ?? new FontLoader();
@@ -241,7 +242,8 @@ export class ReaderEngine {
     return this.initialAnchor ?? captureAnchor(this.roots) ?? this.anchor;
   }
   getResumeAnchor() {
-    return this.resume.canSave ? this.getAnchor() : null;
+    // A provisional layout (before fonts/resume settle) is not reading progress.
+    return this.resume.canSave && this.state.presentationReady ? this.getAnchor() : null;
   }
   restore(anchor: ReadingAnchor | null, explicit = false) {
     if (anchor?.episodeId === this.roots.episodeId) {
@@ -264,17 +266,31 @@ export class ReaderEngine {
     this.preserveEnd = false;
     return this.resume.begin();
   }
-  completeResume(ticket: number, anchor: ReadingAnchor | null, readSucceeded = true) {
+  completeResume(
+    ticket: number,
+    anchor: ReadingAnchor | null,
+    readSucceeded = true,
+    startAtBeginning = false
+  ) {
     if (this.disposed) return;
     const result = this.resume.complete(ticket, anchor, readSucceeded);
     if (!result) return;
     if (result.anchor) this.restore(result.anchor);
     else if (result.saveCurrent) this.persistSoon();
+    else if (startAtBeginning) {
+      // Keep the cover/start ahead of late native callbacks until an actual reading gesture.
+      this.initialPage = 1;
+      this.anchor = null;
+      this.schedule();
+    }
   }
   flushPosition() {
     clearTimeout(this.saveTimer);
+    if (!this.resume.canSave || !this.state.presentationReady) return;
     const anchor = this.getResumeAnchor();
-    if (anchor) this.saveAnchor(anchor);
+    if (anchor) this.saveAnchor(anchor, this.state.progress);
+    else if (this.state.progress >= 0.9)
+      this.saveAnchor({ episodeId: this.roots.episodeId }, this.state.progress);
   }
   refreshServiceRegion() {
     const region = document.querySelector<HTMLElement>('.curation-wrapper');
@@ -625,7 +641,9 @@ export class ReaderEngine {
           const extra = Math.max(0, Math.max(overlayTail, serviceTail) - naturalTail);
           this.ledger.set(text, 'padding-bottom', `${this.originalTextPadding + extra}px`);
         }
-        if (this.preserveEnd) {
+        if (this.initialPage === 1) {
+          box.scrollTop = 0;
+        } else if (this.preserveEnd) {
           box.scrollTop = box.scrollHeight - box.clientHeight;
           this.initialAnchor = null;
         } else if (previous) this.restoreNow(previous);

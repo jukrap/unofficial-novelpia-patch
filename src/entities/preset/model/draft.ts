@@ -32,6 +32,7 @@ export function createPresetDraft(
   source?: Preset,
   duplicate = false
 ): PresetDraft {
+  const settings = source ? applyPresetSettings(current, source.settings) : { ...current };
   return {
     ...(!source?.isDefault && source && !duplicate ? { id: source.id } : {}),
     sourceId: source?.id ?? null,
@@ -42,7 +43,7 @@ export function createPresetDraft(
         : source.name
       : '',
     description: source?.description ?? '',
-    settings: source ? applyPresetSettings(current, source.settings) : { ...current },
+    settings: { ...settings, readingMode: settings.readingMode ?? 'scroll' },
   };
 }
 

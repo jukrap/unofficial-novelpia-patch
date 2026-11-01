@@ -1,4 +1,5 @@
 import { defineWxtModule } from 'wxt/modules';
+import { BUILTIN_BACKGROUNDS } from '../src/shared/config/backgrounds';
 import { build } from 'vite';
 import { resolve } from 'node:path';
 // @ts-expect-error Shared Node-side adapter, checked by lifecycle tests.
@@ -63,6 +64,7 @@ export default defineWxtModule((wxt) => {
     resources.push({
       resources: [
         'content-scripts/esm/*',
+        ...BUILTIN_BACKGROUNDS.map((background) => background.path),
         'fonts/Freesentation-4Regular.woff2',
         'fonts/Freesentation-5Medium.woff2',
         'fonts/Freesentation-6SemiBold.woff2',

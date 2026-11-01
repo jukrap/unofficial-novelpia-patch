@@ -172,6 +172,9 @@
   padding: 0;
   min-width: 0;
 }
+.preset-editor-controls {
+  container: settings / inline-size;
+}
 .preset-editor-fields {
   display: grid;
   grid-template-columns: 1fr;

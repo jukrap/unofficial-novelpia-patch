@@ -60,6 +60,7 @@ async function settings(patch: Record<string, unknown>) {
 }
 
 async function openViewer(mode: 'scroll' | 'page' = 'scroll', query = 'controls') {
+  await settings({ readingMode: mode });
   const page = await context.newPage();
   await page.addInitScript(
     (mode) => localStorage.setItem('viewer_paging', mode === 'page' ? '1' : '0'),
