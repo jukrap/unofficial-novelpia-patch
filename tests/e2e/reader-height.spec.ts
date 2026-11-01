@@ -1,4 +1,4 @@
-import { launchReadingContext } from '../helpers/reading-font-fixture';
+import { launchReadingContext, closeReadingContext } from '../helpers/reading-font-fixture';
 import { test, expect, type BrowserContext } from '@playwright/test';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -103,7 +103,7 @@ test('a 40 percent scroll viewport retains its terminal note, full background an
     await expect.poll(async () => (await box.boundingBox())!.height).toBeLessThan(first.height);
     expect(errors).toEqual([]);
   } finally {
-    await context?.close();
+    await closeReadingContext(context);
     await new Promise<void>((resolve) => server.close(() => resolve()));
     if (path.resolve(profile).startsWith(path.join(tmpdir(), 'unp-height-')))
       await rm(profile, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });

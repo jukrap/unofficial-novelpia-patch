@@ -58,6 +58,18 @@ async function installReadingFonts(context: BrowserContext) {
   });
 }
 
+export async function closeReadingContext(context: BrowserContext | undefined) {
+  if (!context) return;
+  // Finish route handlers before closing their targets. Do not swallow browser crashes
+  // or TargetClosed errors: an unexpected shutdown must still fail the test.
+  try {
+    await Promise.all(context.pages().map((page) => page.unrouteAll({ behavior: 'wait' })));
+    await context.unrouteAll({ behavior: 'wait' });
+  } finally {
+    await context.close();
+  }
+}
+
 export async function launchReadingContext(
   ...args: Parameters<typeof chromium.launchPersistentContext>
 ) {

@@ -1,4 +1,4 @@
-import { launchReadingContext } from '../helpers/reading-font-fixture';
+import { launchReadingContext, closeReadingContext } from '../helpers/reading-font-fixture';
 import { test, expect, type BrowserContext } from '@playwright/test';
 import { cp, mkdtemp, readdir, rename, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -98,7 +98,7 @@ for (const surface of ['viewer', 'options'] as const) {
       ).toBeVisible();
       await expect(page.getByRole('article', { name: saved.name, exact: true })).toBeVisible();
     } finally {
-      await context?.close();
+      await closeReadingContext(context);
       server.closeAllConnections();
       await new Promise<void>((resolve) => server.close(() => resolve()));
       if (path.resolve(workspace).startsWith(path.join(tmpdir(), 'unp-editor-load-')))
@@ -143,7 +143,7 @@ test('a failed themebox remains readable after Escape and reopening', async () =
     await expect(error).toHaveCSS('opacity', '1');
     await expect(error.getByRole('button', { name: '다시 시도', exact: true })).toBeEnabled();
   } finally {
-    await context?.close();
+    await closeReadingContext(context);
     server.closeAllConnections();
     await new Promise<void>((resolve) => server.close(() => resolve()));
     if (path.resolve(workspace).startsWith(path.join(tmpdir(), 'unp-panel-load-')))

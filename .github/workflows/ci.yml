@@ -4,7 +4,7 @@ on:
   pull_request:
     branches: [main, develop]
   push:
-    branches: [main, develop]
+    branches: [main]
   workflow_dispatch:
     inputs:
       operation:
@@ -21,16 +21,51 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  static:
-    name: Static and package
+  plan:
+    name: Verification plan
     if: >-
       inputs.operation != 'store-status' &&
       (github.event.repository.private == false || vars.CI_PRIVATE_ENABLED == 'true')
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      mode: ${{ steps.plan.outputs.mode }}
+      suites: ${{ steps.plan.outputs.suites }}
+      browser: ${{ steps.plan.outputs.browser }}
+      reused: ${{ steps.plan.outputs.reused }}
+      release: ${{ steps.plan.outputs.release }}
+      release_base: ${{ steps.plan.outputs.release_base }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - id: plan
+        run: node scripts/ci-plan.mjs
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          CI_OPERATION: ${{ inputs.operation }}
+
+  static:
+    name: Static and package
+    needs: plan
+    if: >-
+      always() && !cancelled() && inputs.operation != 'store-status' &&
+      (github.event.repository.private == false || vars.CI_PRIVATE_ENABLED == 'true')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Require a valid verification plan
+        run: test "$PLAN_RESULT" = success
+        env:
+          PLAN_RESULT: ${{ needs.plan.result }}
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
           persist-credentials: false
       - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
@@ -42,34 +77,44 @@ jobs:
           cache: pnpm
           package-manager-cache: false
       - run: pnpm install --frozen-lockfile
-      - run: pnpm run type-check
-      - run: pnpm run lint
       - run: pnpm run format:check
+      - run: pnpm run type-check
+        if: needs.plan.outputs.mode != 'docs'
+      - run: pnpm run lint
+        if: needs.plan.outputs.mode != 'docs'
       - run: pnpm run test:unit
+        if: needs.plan.outputs.mode != 'docs'
       - run: pnpm run test:release
+        if: needs.plan.outputs.mode != 'docs'
+      - run: pnpm run test:ci
+        if: needs.plan.outputs.mode != 'docs'
       - name: Validate release metadata and version increase
+        if: needs.plan.outputs.mode != 'docs'
         run: pnpm run release:check
         env:
-          RELEASE_BASE_SHA: ${{ github.event.pull_request.base.ref == 'main' && github.event.pull_request.base.sha || (github.event_name == 'push' && github.ref == 'refs/heads/main' && github.event.before) || '' }}
-      - run: pnpm run build
+          RELEASE_BASE_SHA: ${{ needs.plan.outputs.release_base }}
+      - run: pnpm exec wxt build
+        if: needs.plan.outputs.mode != 'docs'
       - run: pnpm run release:package
+        if: needs.plan.outputs.mode != 'docs'
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: needs.plan.outputs.mode != 'docs'
         with:
           name: release-package
           path: .output/release/
           if-no-files-found: error
           retention-days: 7
 
-  mv3:
-    name: MV3 (Windows)
-    if: >-
-      inputs.operation != 'store-status' &&
-      (github.event.repository.private == false || vars.CI_PRIVATE_ENABLED == 'true')
+  browser:
+    name: MV3 suite
+    needs: plan
+    if: needs.plan.outputs.browser == 'true'
     runs-on: windows-2022
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
       - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
         with:
@@ -81,20 +126,60 @@ jobs:
           package-manager-cache: false
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec playwright install chromium
-      - run: pnpm run test:e2e
+      - run: pnpm run build:e2e
+      - name: Run full MV3 suite
+        if: needs.plan.outputs.mode == 'full'
+        run: pnpm exec playwright test
+      - name: Run affected MV3 suites
+        if: needs.plan.outputs.mode == 'focused'
+        shell: pwsh
+        run: |
+          $suites = $env:MV3_SUITES | ConvertFrom-Json
+          & pnpm exec playwright test @suites
+          exit $LASTEXITCODE
+        env:
+          MV3_SUITES: ${{ needs.plan.outputs.suites }}
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: failure()
         with:
           name: synthetic-mv3-failure
-          path: test-results/
+          path: .output/qa/results/
           if-no-files-found: ignore
           retention-days: 3
 
+  mv3:
+    name: MV3 (Windows)
+    needs: [plan, browser]
+    if: >-
+      always() && !cancelled() && inputs.operation != 'store-status' &&
+      (github.event.repository.private == false || vars.CI_PRIVATE_ENABLED == 'true')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    steps:
+      - name: Verify browser result or matching evidence
+        env:
+          PLAN_RESULT: ${{ needs.plan.result }}
+          BROWSER_REQUIRED: ${{ needs.plan.outputs.browser }}
+          BROWSER_RESULT: ${{ needs.browser.result }}
+          REUSED_RUN: ${{ needs.plan.outputs.reused }}
+          CHECK_MODE: ${{ needs.plan.outputs.mode }}
+        run: |
+          test "$PLAN_RESULT" = success
+          if [ "$BROWSER_REQUIRED" = true ]; then
+            test "$BROWSER_RESULT" = success
+            echo 'Windows MV3 tests passed.' >> "$GITHUB_STEP_SUMMARY"
+          elif [ -n "$REUSED_RUN" ]; then
+            echo "Matching full Windows run: $REUSED_RUN" >> "$GITHUB_STEP_SUMMARY"
+          else
+            test "$CHECK_MODE" = docs || test "$CHECK_MODE" = unit
+            echo "No browser changes ($CHECK_MODE)." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
   release:
     name: GitHub release
-    needs: [static, mv3]
+    needs: [plan, static, mv3]
     if: >-
-      github.ref == 'refs/heads/main' &&
+      github.ref == 'refs/heads/main' && needs.plan.outputs.release == 'true' &&
       (github.event_name == 'push' || inputs.operation == 'release')
     runs-on: ubuntu-24.04
     timeout-minutes: 10

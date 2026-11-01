@@ -1,4 +1,4 @@
-import { launchReadingContext } from '../helpers/reading-font-fixture';
+import { launchReadingContext, closeReadingContext } from '../helpers/reading-font-fixture';
 import { test, expect, type BrowserContext, type CDPSession, type Page } from '@playwright/test';
 import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -49,7 +49,7 @@ test.beforeEach(async () => {
 });
 
 test.afterEach(async () => {
-  await context.close();
+  await closeReadingContext(context);
   if (path.resolve(profile).startsWith(path.join(tmpdir(), 'unp-management-')))
     await rm(profile, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
 });
@@ -286,6 +286,7 @@ test('packaged icons decode at their declared sizes and brand images load offlin
   const productIcon = popup.locator('.popup-product-icon');
   await expect(productIcon).toBeVisible();
   await expect(productIcon).toHaveAttribute('src', /\/icons\/icon128\.png$/);
+  await productIcon.evaluate((image: HTMLImageElement) => image.decode());
   expect(
     await productIcon.evaluate((image: HTMLImageElement) => ({
       width: image.naturalWidth,

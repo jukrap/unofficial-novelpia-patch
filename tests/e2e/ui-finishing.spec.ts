@@ -1,4 +1,4 @@
-import { launchReadingContext } from '../helpers/reading-font-fixture';
+import { launchReadingContext, closeReadingContext } from '../helpers/reading-font-fixture';
 import { test, expect, type BrowserContext, type Page } from '@playwright/test';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -49,7 +49,7 @@ test.beforeEach(async () => {
   extensionId = new URL(worker.url()).host;
 });
 test.afterEach(async () => {
-  await context.close();
+  await closeReadingContext(context);
   if (profile.startsWith(path.join(tmpdir(), 'unp-ui-finishing-')))
     await rm(profile, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
 });
