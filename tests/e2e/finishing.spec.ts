@@ -31,7 +31,10 @@ test.beforeEach(async () => {
   await (context.serviceWorkers()[0] ? Promise.resolve() : context.waitForEvent('serviceworker'));
   page = await context.newPage();
   await page.goto(base);
-  await expect(page.locator('[data-unp-line]').first()).toBeAttached();
+  // Runtime invalidation starts from an initialized reader, after the initial
+  // native-mode adoption and pending settings write have completed.
+  await expect(page.locator('[data-unp-line]').first()).toBeVisible();
+  await expect(page.locator('#unp-navigation-host')).toHaveCSS('opacity', '1');
 });
 test.afterEach(async () => {
   await context.close();
