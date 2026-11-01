@@ -1,6 +1,6 @@
 # 개인정보 처리 안내
 
-적용 대상: Unofficial Novelpia Patch 0.1.1
+적용 대상: Unofficial Novelpia Patch 0.1.1~0.1.2
 
 최종 수정일: 2026년 11월 1일
 
