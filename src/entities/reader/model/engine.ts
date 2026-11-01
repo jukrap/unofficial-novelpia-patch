@@ -706,13 +706,16 @@ export class ReaderEngine {
     if (progress !== this.state.progress || max !== this.state.scrollRange)
       this.publish({ progress, scrollRange: max });
   }
-  seek(progress: number) {
+  seek(progress: number, animate = false) {
     this.resume.userIntent();
     if (this.roots.mode === 'page') {
+      // Cancelling an effect can finish a deferred service reflow and change the
+      // page count. Resolve the requested fraction only after that layout settles.
+      this.cancelTransitions();
       const count = Math.ceil(this.state.pages / this.state.columns);
       this.goTo(
         Math.round(Math.max(0, Math.min(1, progress)) * (count - 1)) * this.state.columns + 1,
-        false
+        animate
       );
       return;
     }

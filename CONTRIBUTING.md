@@ -41,6 +41,8 @@ docs: 설치 방법 정리
 
 기본 타입은 `feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `ci`, `build`, `perf`입니다. 범위는 필요할 때만 붙입니다. 제목은 바뀐 내용을 구체적으로 쓰고 관계없는 정리나 생성물을 섞지 않습니다. 공개 커밋에는 GitHub의 비공개 이메일 주소 사용을 권장합니다.
 
+GitHub에서 생성하는 병합 커밋의 이메일도 확인하세요. 로컬 Git 이메일 설정과 별개입니다. GitHub 이메일 개인정보 설정이나 `gh pr merge --author-email`로 본인의 GitHub 비공개 이메일을 지정할 수 있습니다.
+
 React 컴포넌트·타입은 PascalCase, 함수·변수는 camelCase, 파일·디렉터리는 기존 코드처럼 kebab-case를 기본으로 합니다. 외부 파일 규격이나 기존 공개 API 때문에 다른 이름이 필요한 경우에는 그 계약을 유지합니다.
 
 ## 코드 기준

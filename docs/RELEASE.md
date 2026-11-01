@@ -1,6 +1,6 @@
 # 배포 운영
 
-현재는 비공개 저장소 검토와 Chrome 웹 스토어 최초 등록 준비 단계입니다. GitHub Actions와 스토어 자동 제출은 꺼져 있습니다. 이 문서는 구성과 활성화 절차이며 실제 심사·공개 완료 기록이 아닙니다.
+이 문서는 GitHub Actions의 검증·빌드와 Chrome 웹 스토어 제출을 연결하는 운영 절차입니다. Actions 활성화와 스토어 자동 제출은 별도 설정입니다. 실제 실행 상태는 [Actions](https://github.com/jukrap/unofficial-novelpia-patch/actions), 버전별 파일은 [Releases](https://github.com/jukrap/unofficial-novelpia-patch/releases)에서 확인하세요. 최초 심사 제출 전에는 `CWS_SUBMIT_ENABLED=false`를 유지합니다.
 
 ## 무엇이 자동으로 실행되나요?
 

@@ -64,7 +64,10 @@ async function openOptions() {
 async function openViewer(episode = '1001') {
   const page = await context.newPage();
   await page.goto(`${base}/viewer/${episode}?controls`);
-  await expect(page.locator('[data-unp-line]').first()).toBeAttached();
+  // Marked lines exist before font layout and position restoration finish.
+  // The popup test must start from the screen a reader can actually interact with.
+  await expect(page.locator('[data-unp-line]').first()).toBeVisible();
+  await expect(page.locator('#unp-navigation-host')).toHaveCSS('opacity', '1');
   return page;
 }
 

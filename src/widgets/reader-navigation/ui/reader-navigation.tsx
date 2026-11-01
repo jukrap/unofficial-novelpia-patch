@@ -115,11 +115,10 @@ export function ReaderNavigation({
         value={value}
         disabled={max === 0}
         style={{ '--progress': `${state.progress * 100}%` } as CSSProperties}
-        onChange={(e) =>
-          pageMode
-            ? engine.goTo(Number(e.target.value) * state.columns + 1)
-            : engine.seek(Number(e.target.value) / max)
-        }
+        onChange={(e) => {
+          const range = e.currentTarget;
+          engine.seek(Number(range.value) / Math.max(1, Number(range.max)), pageMode);
+        }}
       />
       <output className="position" data-testid="reader-page" aria-live="off">
         {label}

@@ -12,7 +12,7 @@ pnpm run build
 pnpm run release:package
 ```
 
-- 제출 ZIP: `.output/release/unofficial-novelpia-patch-0.1.1-chrome.zip`
+- 제출 ZIP: `.output/release/`의 `unofficial-novelpia-patch-<버전>-chrome.zip` (빌드한 버전 사용)
 - 무결성 확인: 같은 폴더의 `SHA256SUMS`
 - 파일 목록·버전: 같은 폴더의 `release.json`
 
