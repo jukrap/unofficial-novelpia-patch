@@ -676,9 +676,10 @@ test('persisted page-show reads a fresh automatic position without restoring its
     .click();
   await expect.poll(() => storedAnchor('bookmark')).toBeTruthy();
   const saved = (await storedAnchor('bookmark'))!;
-  await page.evaluate(() =>
-    window.dispatchEvent(new PageTransitionEvent('pagehide', { persisted: true }))
-  );
+  // This case isolates pageshow's fresh read from another document. Wait for
+  // this document's automatic save before editing storage directly. Pagehide's
+  // pending-write ordering has a separate delayed-storage test above.
+  await expect.poll(() => storedAnchor('position')).toEqual(saved);
   const latest = { ...saved, blockKey: '40', textOffset: 0 };
   await context.serviceWorkers()[0]!.evaluate(async (latest) => {
     await chrome.storage.local.set({ 'unp.position.v1.1001': latest });

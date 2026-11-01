@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, mkdir, rm, symlink } from 'node:fs/promises';
+import { mkdtemp, mkdir, rm, symlink, readFile, writeFile, readdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import {
@@ -8,7 +8,29 @@ import {
   workspaceInfo,
   removeWorkspace,
   processIsRunning,
+  copyFailureEvidence,
 } from './qa-workspace.mjs';
+
+test('failure evidence keeps finalized traces and excludes Playwright scratch data', async () => {
+  const root = await mkdtemp(path.join(tmpdir(), 'qa-contract-'));
+  try {
+    const source = path.join(root, 'results');
+    const destination = path.join(root, 'archive');
+    await mkdir(path.join(source, '.playwright-artifacts-0'), { recursive: true });
+    await mkdir(path.join(source, 'failed-test'));
+    await writeFile(path.join(source, '.playwright-artifacts-0', 'pending.network'), 'transient');
+    await writeFile(path.join(source, 'failed-test', 'trace.zip'), 'final trace');
+    await writeFile(path.join(source, 'summary.json'), '{"status":"failed"}');
+    await copyFailureEvidence(source, destination);
+    assert.deepEqual((await readdir(destination)).sort(), ['failed-test', 'summary.json']);
+    assert.equal(
+      await readFile(path.join(destination, 'failed-test', 'trace.zip'), 'utf8'),
+      'final trace'
+    );
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
 
 test('QA cleanup confines deletion to marked project run directories', async () => {
   const root = await mkdtemp(path.join(tmpdir(), 'qa-contract-'));
