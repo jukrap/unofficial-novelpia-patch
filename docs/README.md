@@ -26,6 +26,6 @@
 
 - [등록 자료](../store/LISTING.md): 소개 문구, 권한·개인정보 설명과 심사 절차
 - [첫 등록 순서](../store/FIRST_SUBMISSION.md): 최초 ZIP 업로드와 자동 업데이트 연결
-- [이미지 안내](../store/assets/README.md): 실제 기능 화면과 재촬영 방법
+- [스토어 이미지 촬영](DEVELOPMENT.md#스토어-이미지-촬영): 촬영 명령과 이미지 규격
 
 문서에서 답을 찾지 못했다면 [문의·문제 신고](https://github.com/jukrap/unofficial-novelpia-patch/issues)를 이용하세요. 설정 파일이나 화면을 첨부하기 전 개인 정보가 있는지 확인해 주세요.
