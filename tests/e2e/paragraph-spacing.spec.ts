@@ -36,6 +36,9 @@ test.beforeEach(async () => {
   page = await context.newPage();
   await page.goto(`http://127.0.0.1:${(server.address() as { port: number }).port}/viewer/1001`);
   await expect(page.locator('[data-unp-line]').first()).toBeAttached();
+  // Initial native-mode adoption persists a settings snapshot. Inject the test
+  // values only after that startup write and the first presentation have settled.
+  await expect(page.locator('#unp-navigation-host')).toHaveCSS('opacity', '1');
   await update({
     fontFamily: 'system-ui',
     maxWidth: 500,
