@@ -167,10 +167,17 @@ export function PresetManager({
     }
   };
   const apply = async (preset: Preset) => {
-    store.update(applyPresetSettings(store.getSnapshot().settings, preset.settings));
-    await store.flush();
-    if (store.getSnapshot().status === 'error') throw new Error(store.getSnapshot().error);
+    // Persist the selected card before a reading-mode change can reload the viewer.
+    const previous = presets.getSnapshot().selectedId;
     await presets.select(preset.id);
+    try {
+      store.update(applyPresetSettings(store.getSnapshot().settings, preset.settings));
+      await store.flush();
+      if (store.getSnapshot().status === 'error') throw new Error(store.getSnapshot().error);
+    } catch (error) {
+      await presets.select(previous).catch(() => {});
+      throw error;
+    }
   };
   const openEditor = (source?: Preset, duplicate = false) => {
     const draft = createPresetDraft(store.getSnapshot().settings, source, duplicate);
