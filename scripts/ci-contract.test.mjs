@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   affectsRelease,
+  canReuseBrowserEvidence,
   checkScope,
   inputFingerprint,
   packageReleaseInput,
@@ -69,6 +70,14 @@ test('CI-only changes do not publish an unchanged app version', () => {
     packageReleaseInput(pkg),
     packageReleaseInput({ ...pkg, scripts: { build: 'other' } })
   );
+});
+
+test('manual verification stays fresh while release retries can reuse matching evidence', () => {
+  for (const operation of ['verify', undefined, 'store-status', 'unknown'])
+    assert.equal(canReuseBrowserEvidence('workflow_dispatch', operation), false);
+  assert.equal(canReuseBrowserEvidence('workflow_dispatch', 'release'), true);
+  assert.equal(canReuseBrowserEvidence('push'), true);
+  assert.equal(canReuseBrowserEvidence('pull_request'), true);
 });
 
 const run = {

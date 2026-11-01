@@ -179,6 +179,8 @@ jobs:
     name: GitHub release
     needs: [plan, static, mv3]
     if: >-
+      !cancelled() && needs.plan.result == 'success' &&
+      needs.static.result == 'success' && needs.mv3.result == 'success' &&
       github.ref == 'refs/heads/main' && needs.plan.outputs.release == 'true' &&
       (github.event_name == 'push' || inputs.operation == 'release')
     runs-on: ubuntu-24.04
@@ -205,7 +207,9 @@ jobs:
   store-submit:
     name: Chrome Web Store submission
     needs: release
-    if: github.ref == 'refs/heads/main' && vars.CWS_SUBMIT_ENABLED == 'true'
+    if: >-
+      !cancelled() && needs.release.result == 'success' &&
+      github.ref == 'refs/heads/main' && vars.CWS_SUBMIT_ENABLED == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     concurrency:
