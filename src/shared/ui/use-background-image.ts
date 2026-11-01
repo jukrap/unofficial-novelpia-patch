@@ -20,7 +20,7 @@ export function useBackgroundImage(settings: Settings, enabled = true) {
       enabled &&
       settings.backgroundType === 'image' &&
       Boolean(
-        settings.backgroundImageSource === 'file'
+        settings.backgroundImageSource !== 'url'
           ? settings.backgroundAssetId
           : settings.backgroundImage
       );

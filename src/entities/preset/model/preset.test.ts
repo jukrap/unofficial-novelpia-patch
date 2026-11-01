@@ -13,6 +13,66 @@ import {
 import { defaults } from '@/shared/model/preferences';
 import { memoryStorage } from '../../../../tests/helpers/storage';
 describe('preset storage and backups', () => {
+  it('saves reading mode and page options while old presets keep the live reading behavior', async () => {
+    const current = {
+      ...defaults,
+      readingMode: 'page' as const,
+      spreadMode: 'single' as const,
+      pageEffect: 'fold' as const,
+      pageNavigationPlacement: 'fixed' as const,
+    };
+    expect(
+      applyPresetSettings(current, findPreset('preset_builtin_paper')!.settings)
+    ).toMatchObject({
+      readingMode: 'page',
+      spreadMode: 'single',
+      pageEffect: 'fold',
+      pageNavigationPlacement: 'fixed',
+    });
+    const store = new PresetStore(memoryStorage().port);
+    await store.initialize();
+    const saved = await store.save('페이지 독서', '', current);
+    const imported = store.parseImport(store.export(current));
+    expect(imported.settings).toMatchObject(current);
+    expect(imported.presets[0]?.settings).toMatchObject({
+      readingMode: 'page',
+      spreadMode: 'single',
+      pageEffect: 'fold',
+      pageNavigationPlacement: 'fixed',
+    });
+    expect(applyPresetSettings(defaults, saved.settings)).toMatchObject(current);
+    expect(presetSettingsEqual({ ...current, readingMode: 'scroll' }, saved.settings)).toBe(false);
+    const legacy = store.parseImport(
+      JSON.stringify({
+        settings: { fontSize: 24 },
+        presets: [
+          {
+            id: 'old',
+            name: '기존',
+            description: '',
+            isDefault: false,
+            createdAt: 1,
+            settings: { fontSize: 24 },
+          },
+        ],
+      })
+    );
+    expect(applyPresetSettings(current, legacy.presets[0]!.settings)).toMatchObject({
+      readingMode: 'page',
+      spreadMode: 'single',
+      pageEffect: 'fold',
+      pageNavigationPlacement: 'fixed',
+      fontSize: 24,
+    });
+    expect(createPresetDraft(current, legacy.presets[0]).settings).toMatchObject({
+      readingMode: 'page',
+      spreadMode: 'single',
+    });
+    expect(new Set(builtInPresets.map((item) => item.settings.readingMode))).toEqual(
+      new Set(['scroll', 'page'])
+    );
+    store.dispose();
+  });
   it('round-trips paragraph spacing independently from blank lines and changes only the basic catalog appearance', async () => {
     const store = new PresetStore(memoryStorage().port);
     await store.initialize();
@@ -175,19 +235,19 @@ describe('preset storage and backups', () => {
       '종이',
       '어두움',
       '큰 글씨',
-      '고대비',
-      '회색 종이',
-      '세피아',
-      '짙은 보라',
       '좁은 본문',
       '넓은 본문',
+      '밝은 돌빛',
+      '옅은 녹색',
+      '짙은 청회색',
+      '차분한 보라',
     ]);
     expect(builtInPresets.slice(0, 4).map((preset) => preset.settings.fontSize)).toEqual([
-      18, 20, 18, 24,
+      18, 20, 20, 26,
     ]);
-    expect(legacyBuiltInPresets).toHaveLength(35);
+    expect(legacyBuiltInPresets).toHaveLength(44);
     const catalogs = [...builtInPresets, ...legacyBuiltInPresets];
-    expect(new Set(catalogs.map((preset) => preset.id)).size).toBe(45);
+    expect(new Set(catalogs.map((preset) => preset.id)).size).toBe(54);
     expect(catalogs.every((preset) => !preset.settings.autoRecommend)).toBe(true);
     const db = memoryStorage();
     const store = new PresetStore(db.port);
@@ -205,6 +265,50 @@ describe('preset storage and backups', () => {
     await expect(store.save('덮어쓰기', '', defaults, legacyBuiltInPresets[0]!.id)).rejects.toThrow(
       '기본 프리셋'
     );
+    store.dispose();
+  });
+  it('carries packaged backgrounds across copy/export/import without rewriting a saved appearance', async () => {
+    const db = memoryStorage();
+    const store = new PresetStore(db.port);
+    await store.initialize();
+    const old = findPreset('preset_builtin_paper')!;
+    const saved = await store.save('예전 종이', '', { ...defaults, ...old.settings });
+    expect(saved.settings).toMatchObject({
+      maxWidth: 800,
+      horizontalPadding: 30,
+      verticalPadding: 20,
+    });
+    const scenes = builtInPresets.filter(
+      (item) => item.settings.backgroundImageSource === 'builtin'
+    );
+    expect(scenes).toHaveLength(4);
+    for (const scene of scenes) {
+      const settings = applyPresetSettings(
+        { ...defaults, autoRecommend: true, pageEffect: 'fold', pageNavigationPlacement: 'fixed' },
+        scene.settings
+      );
+      expect(settings).toMatchObject({
+        autoRecommend: true,
+        readingMode: scene.settings.readingMode,
+        pageEffect: scene.settings.pageEffect,
+        pageNavigationPlacement: scene.settings.pageNavigationPlacement,
+      });
+      await store.save(scene.name, '', settings);
+      const exported = store.export(settings);
+      expect(exported).not.toContain('chrome-extension://');
+      const restored = store.parseImport(exported);
+      expect(restored.settings).toMatchObject({
+        backgroundImageSource: 'builtin',
+        backgroundAssetId: scene.settings.backgroundAssetId,
+      });
+      expect(restored.presets.find((item) => item.name === scene.name)?.settings).toMatchObject({
+        backgroundAssetId: scene.settings.backgroundAssetId,
+        readerHeightPercent: scene.settings.readerHeightPercent,
+      });
+    }
+    expect(
+      store.getSnapshot().presets.find((item) => item.id === saved.id)?.settings
+    ).toMatchObject({ maxWidth: 800 });
     store.dispose();
   });
   it('serializes concurrent CRUD, keeps IDs and rejects duplicate names', async () => {

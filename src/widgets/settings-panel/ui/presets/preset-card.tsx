@@ -49,6 +49,18 @@ export function PresetCard({
       <ReadingPreview settings={settings} loadFont={visible} compact />
       <dl className="preset-card-metrics">
         <div>
+          <dt>읽기</dt>
+          <dd>
+            {settings.readingMode == null
+              ? '현재 방식 유지'
+              : settings.readingMode === 'scroll'
+                ? '스크롤'
+                : settings.spreadMode === 'single'
+                  ? '페이지 · 한 쪽'
+                  : '페이지 · 자동 한/두 쪽'}
+          </dd>
+        </div>
+        <div>
           <dt>크기</dt>
           <dd>{settings.fontSize}px</dd>
         </div>
@@ -66,12 +78,10 @@ export function PresetCard({
           <dt>너비</dt>
           <dd>{settings.maxWidth}px</dd>
         </div>
-        {settings.readerHeightPercent !== 100 ? (
-          <div>
-            <dt>높이</dt>
-            <dd>{settings.readerHeightPercent}%</dd>
-          </div>
-        ) : null}
+        <div>
+          <dt>높이</dt>
+          <dd>{settings.readerHeightPercent}%</dd>
+        </div>
         <div>
           <dt>여백</dt>
           <dd>
