@@ -115,6 +115,19 @@ export function ReaderNavigation({
         value={value}
         disabled={max === 0}
         style={{ '--progress': `${state.progress * 100}%` } as CSSProperties}
+        onKeyDown={(event) => {
+          if (
+            event.altKey ||
+            event.ctrlKey ||
+            event.metaKey ||
+            (event.key !== 'Home' && event.key !== 'End')
+          )
+            return;
+          // A range emits no change when already at its endpoint. Still preserve
+          // the explicit destination if a late service reflow changes its max.
+          event.preventDefault();
+          engine.seek(event.key === 'End' ? 1 : 0, pageMode);
+        }}
         onChange={(e) => {
           const range = e.currentTarget;
           engine.seek(Number(range.value) / Math.max(1, Number(range.max)), pageMode);
