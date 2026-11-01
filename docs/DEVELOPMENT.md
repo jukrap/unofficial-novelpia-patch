@@ -109,9 +109,24 @@ CI는 Linux에서 정적 검사·단위 검사·일반 빌드를, Windows에서 
 
 `release:package`가 만드는 `.output/release/`의 ZIP·SHA256SUMS·메타데이터를 제출 기준으로 사용합니다. 일반 `pnpm run zip` 결과와 혼동하지 마세요. 활성화 조건, 필요한 변수와 실패 후 재실행은 [배포 운영](RELEASE.md)을 따릅니다.
 
-## 아이콘과 라이선스
+## 스토어 이미지 촬영
 
-스토어·README 이미지는 일반 배포 빌드 후 `node scripts/store-assets.mjs`로 촬영합니다. 실제 확장 UI와 직접 작성한 본문을 사용하며, 촬영 원본은 공개 소스와 분리된 테스트 출력에 둡니다. 구성과 검수 기준은 [이미지 안내](../store/assets/README.md)를 참고하세요.
+의존성과 Playwright Chromium을 설치한 뒤 실행합니다.
+
+```sh
+pnpm run build
+node scripts/store-assets.mjs
+```
+
+실제 배포 확장을 격리된 Chromium에서 실행하고, 직접 작성한 예시 본문으로 촬영합니다. 실제 작품이나 계정 정보는 사용하지 않습니다. 확장 UI는 그대로 촬영하며, 소개 문구와 프레임만 화면 바깥에 붙입니다.
+
+완성된 이미지는 `store/assets/`, 촬영 원본과 버전 정보는 Git에서 제외된 `test-results/store-captures/`에 저장합니다. 임시 브라우저 프로필은 종료 시 정리합니다. 촬영용 프리젠테이션 글꼴은 동봉 파일로 응답하고, 다른 웹글꼴은 실제 로더를 사용합니다.
+
+스크린샷은 `01-reading.png`부터 `05-user-fonts.png`까지 다섯 장이며 각각 1280×800px입니다. 작은 홍보 이미지는 `promo-440x280.png`(440×280px), 아이콘은 `public/icons/icon128.png`를 사용합니다. `scripts/store-artwork.mjs`에서 소개 문구와 홍보 이미지 구성을 수정할 수 있습니다.
+
+촬영 후 글꼴·이미지 로딩, 잘린 화면, 제품명과 소개 내용이 실제 기능에 맞는지 확인하세요. 이미지 규격은 [Chrome 웹 스토어 등록 기준](https://developer.chrome.com/docs/webstore/cws-dashboard-listing)을 따릅니다.
+
+## 아이콘과 라이선스
 
 아이콘을 바꾸면 원본과 생성 스크립트를 함께 유지하고 `pnpm run icons:generate`로 필요한 크기를 생성합니다. 원본 작업 파일은 확장 ZIP에 넣지 않습니다.
 

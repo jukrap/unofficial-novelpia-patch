@@ -23,7 +23,7 @@ ZIP 루트에는 manifest.json이 있어야 합니다. `chrome-mv3-e2e` 빌드�
 1. [개발자 대시보드](https://chrome.google.com/webstore/devconsole)에서 **새 항목**을 선택하고 ZIP을 업로드합니다.
 2. 생성된 **32자 항목 ID**를 기록합니다. 게시자 ID와 항목 ID는 다릅니다.
 3. [등록 자료](LISTING.md)의 이름·짧은 설명·상세 설명을 입력합니다.
-4. [이미지 안내](assets/README.md)의 스크린샷 5장, 작은 홍보 이미지와 128px 아이콘을 올립니다.
+4. `store/assets/01-reading.png`부터 `05-user-fonts.png`까지 스크린샷 5장, `promo-440x280.png` 작은 홍보 이미지와 `public/icons/icon128.png` 아이콘을 올립니다. [README에서 화면을 미리 확인](../README.md#화면-미리보기)할 수 있습니다.
 5. 분류·기본 언어·개발자 연락처·배포 지역 등 대시보드의 필수 항목을 확인합니다.
 
 이 단계에서는 초안을 저장할 수 있습니다. 계정 약관·데이터 공개 확인·연락처 등 소유자의 사실 확인이 필요한 항목은 실제 상태를 확인하고 작성하세요.
