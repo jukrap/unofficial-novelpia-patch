@@ -62,6 +62,8 @@ test.beforeEach(async () => {
   await expect(page.locator('[data-unp-reader="page"]')).toBeVisible();
   await expect(page.locator('[data-unp-line]').first()).toBeVisible();
   await expect(page.locator('#unp-navigation-host')).toBeAttached();
+  // Snapshot opacity after the initial reading-surface reveal has finished.
+  await expect(page.locator('#unp-navigation-host')).toHaveCSS('opacity', '1');
 });
 test.afterEach(async () => {
   await context?.close();

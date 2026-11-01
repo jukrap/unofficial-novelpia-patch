@@ -152,7 +152,7 @@ export class ReaderBackground {
     if (
       settings.backgroundType !== 'image' ||
       (settings.backgroundImageSource === 'url' && !settings.backgroundImage) ||
-      (settings.backgroundImageSource === 'file' && !settings.backgroundAssetId)
+      (settings.backgroundImageSource !== 'url' && !settings.backgroundAssetId)
     ) {
       if (this.current) this.unmount(this.current.element);
       this.current?.release();

@@ -1,4 +1,5 @@
 import type { Settings } from '@/shared/model/preferences';
+import { BUILTIN_BACKGROUNDS } from '@/shared/config/backgrounds';
 import {
   validateBackgroundFile,
   validateImageSignature,
@@ -185,9 +186,9 @@ type ImageSettings = Pick<
 >;
 export function backgroundImageKey(settings: ImageSettings): string | null {
   if (settings.backgroundType !== 'image') return null;
-  return settings.backgroundImageSource === 'file'
+  return settings.backgroundImageSource !== 'url'
     ? settings.backgroundAssetId
-      ? `file:${settings.backgroundAssetId}`
+      ? `${settings.backgroundImageSource}:${settings.backgroundAssetId}`
       : null
     : settings.backgroundImage
       ? `url:${settings.backgroundImage}`
@@ -220,6 +221,10 @@ async function loadDecodedBackground(settings: ImageSettings, signal: AbortSigna
     if (signal?.aborted) throw abortError();
     url = URL.createObjectURL(blob);
     local = true;
+  } else if (settings.backgroundImageSource === 'builtin') {
+    const entry = BUILTIN_BACKGROUNDS.find((item) => item.id === settings.backgroundAssetId);
+    if (!entry) throw new Error('기본 배경을 다시 선택해 주세요.');
+    url = chrome.runtime.getURL(entry.path);
   } else {
     const parsed = new URL(url);
     if (!['https:', 'http:'].includes(parsed.protocol) || parsed.username || parsed.password)
