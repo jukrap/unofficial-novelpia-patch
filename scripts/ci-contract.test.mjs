@@ -43,7 +43,7 @@ test('fingerprint ignores docs only and detects paths, modes, toolchain and test
   );
 });
 
-test('CI-only changes do not publish an unchanged app version', () => {
+test('CI and store artwork changes do not publish an unchanged app version', () => {
   for (const file of [
     '.github/workflows/ci.yml',
     'tests/e2e/reader.spec.ts',
@@ -51,6 +51,9 @@ test('CI-only changes do not publish an unchanged app version', () => {
     'scripts/release-check.mjs',
     'playwright.config.ts',
     'docs/RELEASE.md',
+    'scripts/store-assets.mjs',
+    'scripts/store-artwork.mjs',
+    'scripts/store-promo.mjs',
   ])
     assert.equal(affectsRelease(file), false, file);
   for (const file of [
@@ -59,6 +62,7 @@ test('CI-only changes do not publish an unchanged app version', () => {
     'modules/esm.ts',
     'wxt.config.ts',
     'pnpm-lock.yaml',
+    'scripts/store-unknown.mjs',
   ])
     assert.equal(affectsRelease(file), true, file);
   const pkg = { version: '1.0.0', scripts: { build: 'wxt build', 'test:ci': 'old' } };
