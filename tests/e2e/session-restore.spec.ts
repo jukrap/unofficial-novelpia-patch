@@ -49,6 +49,8 @@ for (const mode of ['scroll', 'page'] as const) {
         const page = context.pages()[0]!;
         await page.goto(url);
         await expect(page.locator('[data-unp-reader="scroll"]')).toBeVisible();
+        // Wait for initial preference adoption before injecting an external storage edit.
+        await expect(page.locator('#unp-navigation-host')).toHaveCSS('opacity', '1');
         const worker = context.serviceWorkers()[0] ?? (await context.waitForEvent('serviceworker'));
         await worker.evaluate(async () => {
           const raw = await chrome.storage.sync.get('unp.reader.v1');
@@ -58,9 +60,14 @@ for (const mode of ['scroll', 'page'] as const) {
         });
         await expect(page.locator('[data-unp-line]').first()).toHaveCSS('font-size', '23px');
         if (mode === 'page') {
-          await page.evaluate(() => localStorage.setItem('viewer_paging', '1'));
-          await page.reload();
+          await worker.evaluate(async () => {
+            const raw = await chrome.storage.sync.get('unp.reader.v1');
+            const doc = raw['unp.reader.v1'] as { data: Record<string, unknown> };
+            doc.data.readingMode = 'page';
+            await chrome.storage.sync.set({ 'unp.reader.v1': doc });
+          });
           await expect(page.locator('[data-unp-reader="page"]')).toBeVisible();
+          await expect(page.locator('#unp-navigation-host')).toHaveCSS('opacity', '1');
         }
         await page.evaluate(() => sessionStorage.setItem('unp-test-restoring', '1'));
         if (fault === 'disabled')
