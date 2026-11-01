@@ -50,8 +50,7 @@ async function update(patch: Record<string, unknown>) {
 for (const mode of ['scroll', 'page'] as const) {
   test(`extension invalidation retires the old ${mode} reader without API errors or an automatic page reload`, async () => {
     if (mode === 'page') {
-      await page.evaluate(() => localStorage.setItem('viewer_paging', '1'));
-      await page.reload();
+      await update({ readingMode: 'page' });
     }
     await expect(page.locator(`[data-unp-reader="${mode}"]`)).toBeVisible();
     await page.locator('#btn_theme').click();
@@ -157,8 +156,7 @@ test('external mode change leaves navigation under user control and requests a r
 });
 
 test('native lists can hide a paged reader across resize and settings changes then restore it', async () => {
-  await page.evaluate(() => localStorage.setItem('viewer_paging', '1'));
-  await page.reload();
+  await update({ readingMode: 'page' });
   await expect(page.locator('[data-unp-reader="page"]')).toBeVisible();
   // The root exists during initial preparation; exercise navigation once text is readable.
   await expect(page.locator('[data-unp-line]').first()).toBeVisible();

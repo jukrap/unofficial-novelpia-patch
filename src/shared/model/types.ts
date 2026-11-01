@@ -34,13 +34,14 @@ export interface LegacySettings {
 }
 
 export interface BackgroundImageSettings {
-  backgroundImageSource: 'url' | 'file';
+  backgroundImageSource: 'url' | 'file' | 'builtin';
   backgroundAssetId: string | null;
 }
 export type PageEffect = 'none' | 'slide' | 'fade' | 'paper' | 'fold';
 export type Settings = LegacySettings &
   BackgroundImageSettings & {
     enabled: boolean;
+    readingMode: 'scroll' | 'page' | null;
     spreadMode: 'auto' | 'single';
     pageGap: number;
     pageNavigationPlacement: 'reserved' | 'fixed' | 'overlay';
@@ -58,5 +59,17 @@ export interface Preset {
   createdAt: number;
   settings: LegacySettings &
     Partial<BackgroundImageSettings> &
-    Partial<Pick<Settings, 'pageGap' | 'readerHeightPercent' | 'readingSurfaces' | 'paragraphGap'>>;
+    Partial<
+      Pick<
+        Settings,
+        | 'readingMode'
+        | 'spreadMode'
+        | 'pageEffect'
+        | 'pageNavigationPlacement'
+        | 'pageGap'
+        | 'readerHeightPercent'
+        | 'readingSurfaces'
+        | 'paragraphGap'
+      >
+    >;
 }

@@ -36,7 +36,8 @@ class TestImage {
   }
   set src(value: string) {
     this.value = value;
-    if (value.startsWith('blob:')) queueMicrotask(() => this.onload?.());
+    if (value.startsWith('blob:') || value.startsWith('chrome-extension:'))
+      queueMicrotask(() => this.onload?.());
   }
   get src() {
     return this.value;
@@ -46,7 +47,9 @@ const sendMessage = vi.fn();
 beforeEach(() => {
   images = [];
   vi.stubGlobal('Image', TestImage);
-  vi.stubGlobal('chrome', { runtime: { sendMessage } });
+  vi.stubGlobal('chrome', {
+    runtime: { sendMessage, getURL: (path: string) => `chrome-extension://test/${path}` },
+  });
   vi.stubGlobal(
     'URL',
     class extends URL {
@@ -62,6 +65,25 @@ afterEach(() => {
 });
 
 describe('local background assets', () => {
+  it('resolves only packaged IDs without local writes or external URLs', async () => {
+    const settings = {
+      ...defaults,
+      backgroundType: 'image' as const,
+      backgroundImageSource: 'builtin' as const,
+      backgroundAssetId: 'warm-stone',
+    };
+    const result = await resolveBackgroundImage(settings);
+    expect(result?.url).toBe('chrome-extension://test/assets/backgrounds/warm-stone.svg');
+    result?.release();
+    const next = await resolveBackgroundImage(settings);
+    expect(next?.reused).toBe(true);
+    next?.release();
+    await expect(
+      resolveBackgroundImage({ ...settings, backgroundAssetId: '../private.json' })
+    ).rejects.toThrow('다시 선택');
+    expect(sendMessage).not.toHaveBeenCalled();
+    expect(URL.createObjectURL).not.toHaveBeenCalled();
+  });
   it('rejects unsupported, oversized and disguised image files before storing them', () => {
     expect(() => validateBackgroundFile({ type: 'image/svg+xml', size: 100 })).toThrow('JPEG');
     expect(() =>
