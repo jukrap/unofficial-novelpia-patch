@@ -1,4 +1,4 @@
-import { launchReadingContext } from '../helpers/reading-font-fixture';
+import { launchReadingContext, closeReadingContext } from '../helpers/reading-font-fixture';
 import { test, expect, type BrowserContext, type Page } from '@playwright/test';
 import { mkdtemp, rm } from 'node:fs/promises';
 import path from 'node:path';
@@ -54,7 +54,7 @@ test.beforeEach(async () => {
   );
 });
 test.afterEach(async () => {
-  await context?.close();
+  await closeReadingContext(context);
   server.closeAllConnections();
   await new Promise<void>((resolve) => server.close(() => resolve()));
   if (profile.startsWith(path.join(tmpdir(), 'unp-paragraph-')))

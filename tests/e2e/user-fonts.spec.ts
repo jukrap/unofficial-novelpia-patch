@@ -1,4 +1,4 @@
-import { launchReadingContext } from '../helpers/reading-font-fixture';
+import { launchReadingContext, closeReadingContext } from '../helpers/reading-font-fixture';
 import { test, expect, type BrowserContext, type Page } from '@playwright/test';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -48,7 +48,7 @@ test.beforeEach(async () => {
 });
 
 test.afterEach(async () => {
-  await context.close();
+  await closeReadingContext(context);
   if (path.resolve(profile).startsWith(path.join(tmpdir(), 'unp-user-fonts-')))
     await rm(profile, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
 });

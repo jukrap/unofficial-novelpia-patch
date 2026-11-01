@@ -1,4 +1,4 @@
-import { launchReadingContext } from '../helpers/reading-font-fixture';
+import { launchReadingContext, closeReadingContext } from '../helpers/reading-font-fixture';
 import { test, expect, type BrowserContext, type Page } from '@playwright/test';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -37,7 +37,7 @@ test.beforeEach(async () => {
   await expect(page.locator('#unp-navigation-host')).toHaveCSS('opacity', '1');
 });
 test.afterEach(async () => {
-  await context.close();
+  await closeReadingContext(context);
   server.closeAllConnections();
   await new Promise<void>((resolve) => server.close(() => resolve()));
   if (profile.startsWith(path.join(tmpdir(), 'unp-finishing-')))

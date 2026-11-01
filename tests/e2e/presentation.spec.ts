@@ -3,7 +3,7 @@ import { cp, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import http from 'node:http';
-import { launchReadingContext } from '../helpers/reading-font-fixture';
+import { launchReadingContext, closeReadingContext } from '../helpers/reading-font-fixture';
 // @ts-expect-error Synthetic text only.
 import { viewerHtml } from '../fixtures/viewer.mjs';
 
@@ -193,7 +193,7 @@ for (const sample of [
       }
       expect(errors).toEqual([]);
     } finally {
-      await context?.close();
+      await closeReadingContext(context);
       server.closeAllConnections();
       await new Promise<void>((resolve) => server.close(() => resolve()));
       if (path.resolve(workspace).startsWith(path.join(tmpdir(), 'unp-presentation-')))

@@ -21,6 +21,8 @@
     "test:unit": "vitest run",
     "test:e2e": "pnpm run build:e2e && playwright test",
     "test:release": "node --test scripts/release-*.test.mjs scripts/cws-*.test.mjs",
+    "test:ci": "node --test scripts/ci-*.test.mjs scripts/qa-*.test.mjs",
+    "qa:clean": "node scripts/qa-clean.mjs",
     "release:check": "node scripts/release-check.mjs",
     "release:package": "node scripts/release-package.mjs",
     "cws:status": "node scripts/cws-release.mjs status",
