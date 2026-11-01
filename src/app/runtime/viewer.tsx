@@ -8,11 +8,14 @@ import {
   parseAnchor,
   positionKey,
   resumeAnchor,
+  completedPosition,
+  POSITION_MESSAGE,
   StyleLedger,
   BookmarkStore,
   FontLoader,
   ReadingControls,
   type ReadingAnchor,
+  type AutomaticPosition,
 } from '@/entities/reader';
 import { chromeStorage, hasExtensionContext } from '@/shared/platform/storage';
 import { NativeClient } from '@/shared/platform/native';
@@ -22,6 +25,7 @@ import { EpisodeListTheme, nativeModeEntry, reloadNotice } from '../ui/viewer-su
 import { trackReadingStatistics } from './reading-statistics';
 import type { ViewerPreparation } from './bootstrap';
 import { FirstDisplay } from './first-display';
+import { storedReadingMode } from './reading-mode';
 import { installUiFonts, loadUiFonts } from '@/shared/platform/ui-fonts';
 import { initializeUserFonts, subscribeFonts } from '@/shared/platform/user-fonts';
 
@@ -134,8 +138,21 @@ export function startViewer(isContextValid = hasExtensionContext, preparation?: 
     if (saved?.anchor) engine?.restore(saved.anchor, true);
     else if (saved?.legacy) engine?.restoreLegacyBookmark(saved.legacy);
   };
-  const savePosition = (anchor: ReadingAnchor) => {
-    void storage.local.set({ [positionKey(anchor.episodeId)]: anchor }).catch(() => {});
+  const completedEpisodes = new Set<string>();
+  let pendingPositionSave: Promise<void> = Promise.resolve();
+  const writePosition = async (anchor: AutomaticPosition, progress: number) => {
+    if (completedEpisodes.has(anchor.episodeId) || !isContextValid()) return;
+    const result = await chrome.runtime.sendMessage({ type: POSITION_MESSAGE, anchor, progress });
+    if (!result?.ok)
+      throw new Error(
+        typeof result?.error === 'string'
+          ? result.error
+          : '읽던 위치를 저장하지 못했습니다. 다시 시도해 주세요.'
+      );
+    if (result.completed) completedEpisodes.add(anchor.episodeId);
+  };
+  const savePosition = (anchor: AutomaticPosition, progress: number) => {
+    pendingPositionSave = writePosition(anchor, progress).catch(() => {});
   };
   const resumePosition = (current: ReaderEngine, ...preferred: (ReadingAnchor | null)[]) => {
     const ticket = current.beginResume();
@@ -146,17 +163,25 @@ export function startViewer(isContextValid = hasExtensionContext, preparation?: 
         if (finished) return;
         finished = true;
         clearTimeout(timer);
-        if (!disposed && current === engine)
-          current.completeResume(ticket, resumeAnchor(episode, ...preferred, raw), succeeded);
+        if (!disposed && current === engine) {
+          const completed = completedPosition(raw, episode);
+          if (completed) completedEpisodes.add(episode);
+          const anchor = resumeAnchor(episode, ...preferred, raw);
+          current.completeResume(ticket, anchor, succeeded, completed && !anchor);
+        }
         resolve();
       };
       // A failed/stalled read must not replace the saved anchor, or jump later
       // after a fallback was already shown to the reader.
       const timer = setTimeout(() => finish(null, false), 5000);
-      void storage.local.get(positionKey(episode)).then(
-        (raw) => finish(raw[positionKey(episode)], true),
-        () => finish(null, false)
-      );
+      // A BFCache return can arrive while pagehide is still awaiting the worker.
+      // Read only after this document's last queued report has been acknowledged.
+      void pendingPositionSave
+        .then(() => storage.local.get(positionKey(episode)))
+        .then(
+          (raw) => finish(raw[positionKey(episode)], true),
+          () => finish(null, false)
+        );
     });
   };
   const onNative = async (option: NativeOption, value: boolean | 'scroll' | 'page') => {
@@ -165,7 +190,7 @@ export function startViewer(isContextValid = hasExtensionContext, preparation?: 
     if (option === 'mode') {
       const anchor = engine?.getResumeAnchor();
       if (anchor) {
-        await storage.local.set({ [positionKey(anchor.episodeId)]: anchor });
+        await writePosition(anchor, engine!.getSnapshot().progress);
         sessionStorage.setItem(modePositionKey(anchor.episodeId), JSON.stringify(anchor));
       }
     }
@@ -178,6 +203,18 @@ export function startViewer(isContextValid = hasExtensionContext, preparation?: 
       schedule();
     }
   };
+  const readingMode = storedReadingMode({
+    settings,
+    storage,
+    nativeState: () => state,
+    canApply: () =>
+      !disposed && sessionEnabled && settings.getSnapshot().settings.enabled && !switching,
+    apply: (mode) => onNative('mode', mode),
+    onError: (error) => {
+      nativeError = `읽기 방식을 적용하지 못했습니다. ${error instanceof Error ? error.message : String(error)}`;
+      render();
+    },
+  });
   const syncDark = () => {
     if (!sessionEnabled || !settings.getSnapshot().settings.enabled || switching || syncingDark)
       return;
@@ -232,12 +269,13 @@ export function startViewer(isContextValid = hasExtensionContext, preparation?: 
     try {
       await resumeReady;
       const anchor = engine?.getResumeAnchor();
-      if (anchor) await storage.local.set({ [positionKey(anchor.episodeId)]: anchor });
+      if (anchor) await writePosition(anchor, engine!.getSnapshot().progress);
       settings.update({ enabled });
       await settings.flush();
       if (settings.getSnapshot().status === 'error') throw new Error(settings.getSnapshot().error);
       if (!enabled) {
         await restoreNativeDark();
+        await readingMode.restore();
       }
       if (reload) window.location.reload();
     } catch (error) {
@@ -555,6 +593,12 @@ export function startViewer(isContextValid = hasExtensionContext, preparation?: 
     if (!sessionEnabled) {
       preparation?.reveal();
       void restoreNativeDark().catch(() => {});
+      void readingMode
+        .restore()
+        .then((changed) => {
+          if (changed && !disposed) window.location.reload();
+        })
+        .catch(() => {});
       const advanced = document.getElementById('option_panel_2');
       if (advanced && nativeEntry !== advanced) {
         removeNativeEntry();
@@ -621,6 +665,8 @@ export function startViewer(isContextValid = hasExtensionContext, preparation?: 
           if (settings.getSnapshot().needsEffectMigration)
             settings.update({ pageEffect: value.animation ? 'fade' : 'none' });
           engine?.setAnimation(value.animation);
+          await readingMode.sync();
+          if (disposed || engine !== current) return;
           syncDark();
           await darkSync;
           if (disposed || engine !== current) return;
@@ -706,6 +752,7 @@ export function startViewer(isContextValid = hasExtensionContext, preparation?: 
           engine?.update(s);
           appliedSettings = s;
           syncDark();
+          void readingMode.sync();
         }
         schedule();
         const episode = location.pathname.match(/\/viewer\/(\d+)/)?.[1];

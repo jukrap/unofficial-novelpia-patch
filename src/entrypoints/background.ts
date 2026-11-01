@@ -3,9 +3,11 @@ import { installBackgroundAssetService } from '@/shared/platform/background-asse
 import { installReadingStatsService } from '@/entities/reading-stats';
 import { installUserFontService } from '@/entities/local-fonts';
 import { installViewerModeService } from '@/app/runtime/viewer-mode-service';
+import { installReadingPositionService } from '@/app/runtime/reading-position-service';
 export default defineBackground(() => {
   installBackgroundAssetService();
   installUserFontService();
   installReadingStatsService();
   installViewerModeService();
+  installReadingPositionService();
 });

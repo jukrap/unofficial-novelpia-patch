@@ -14,6 +14,7 @@ import { DelayedLoading } from '@/shared/ui/loading-indicator';
 import { Row } from './controls';
 import { SelectControl } from '@/shared/ui/select-control';
 import styles from './background-image-field.css?inline';
+import { BUILTIN_BACKGROUNDS } from '@/shared/config/backgrounds';
 
 export function BackgroundImageField({
   settings,
@@ -109,6 +110,26 @@ export function BackgroundImageField({
           <MotionButton
             type="button"
             disabled={busy}
+            className={source === 'builtin' ? 'active' : ''}
+            aria-pressed={source === 'builtin'}
+            onClick={() => {
+              discardBackgroundAsset(current.current);
+              setError('');
+              onChange({
+                backgroundImageSource: 'builtin',
+                backgroundAssetId: BUILTIN_BACKGROUNDS.some(
+                  (item) => item.id === settings.backgroundAssetId
+                )
+                  ? settings.backgroundAssetId
+                  : BUILTIN_BACKGROUNDS[0].id,
+              });
+            }}
+          >
+            기본 배경
+          </MotionButton>
+          <MotionButton
+            type="button"
+            disabled={busy}
             className={source === 'url' ? 'active' : ''}
             aria-pressed={source === 'url'}
             onClick={() => {
@@ -125,13 +146,30 @@ export function BackgroundImageField({
             aria-pressed={source === 'file'}
             onClick={() => {
               setError('');
-              onChange({ backgroundImageSource: 'file' });
+              onChange({
+                backgroundImageSource: 'file',
+                ...(BUILTIN_BACKGROUNDS.some((item) => item.id === settings.backgroundAssetId)
+                  ? { backgroundAssetId: null }
+                  : {}),
+              });
             }}
           >
             파일
           </MotionButton>
         </div>
-        {source === 'url' ? (
+        {source === 'builtin' ? (
+          <>
+            <SelectControl
+              label="기본 배경 이미지"
+              value={settings.backgroundAssetId ?? ''}
+              options={BUILTIN_BACKGROUNDS.map((item) => ({ value: item.id, label: item.name }))}
+              onChange={(value) => onChange({ backgroundAssetId: value })}
+            />
+            <p className="background-file-note">
+              확장에 포함되어 있어 파일 등록 없이 사용할 수 있습니다.
+            </p>
+          </>
+        ) : source === 'url' ? (
           <input
             aria-label="배경 이미지 주소"
             type="url"
