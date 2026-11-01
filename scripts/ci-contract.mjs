@@ -58,6 +58,8 @@ export function packageReleaseInput(pkg) {
 
 export function affectsRelease(file) {
   if (isDocumentation(file)) return false;
+  // Store artwork exporters are verified tools, but are not shipped in the extension.
+  if (/^scripts\/store-(?:assets|artwork|promo)\.mjs$/.test(file)) return false;
   return !/^(?:tests\/|\.github\/|scripts\/(?:ci-|qa-|release-|cws-|fsd-rule)|playwright\.config\.|vitest\.config\.|eslint\.config\.|\.prettier|\.gitignore$)/.test(
     file
   );

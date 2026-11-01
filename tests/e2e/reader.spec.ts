@@ -904,11 +904,17 @@ test('navigation endpoints reach odd and even final spreads after layout changes
         return r.left >= v.left && r.right <= v.right && r.top >= v.top && r.bottom <= v.bottom;
       })
     ).toBe(true);
-    const layout = await page.evaluate(() => ({
-      bodyBottom: document.getElementById('novel_drawing_page_c')!.getBoundingClientRect().bottom,
-      navigationTop: document.getElementById('unp-navigation-host')!.getBoundingClientRect().top,
-    }));
-    expect(layout.bodyBottom).toBeLessThanOrEqual(layout.navigationTop);
+    // Font styles can update before the engine's next animation-frame layout.
+    // Assert the final boundary without sampling that intermediate frame.
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () =>
+            document.getElementById('novel_drawing_page_c')!.getBoundingClientRect().bottom -
+            document.getElementById('unp-navigation-host')!.getBoundingClientRect().top
+        )
+      )
+      .toBeLessThanOrEqual(0);
     await page.locator('#unp-navigation-host input').press('Home');
   }
   expect([...parity].sort()).toEqual([0, 1]);

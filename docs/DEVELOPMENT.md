@@ -122,7 +122,15 @@ node scripts/store-assets.mjs
 
 완성된 이미지는 `store/assets/`, 촬영 원본과 버전 정보는 Git에서 제외된 `test-results/store-captures/`에 저장합니다. 임시 브라우저 프로필은 종료 시 정리합니다. 촬영용 프리젠테이션 글꼴은 동봉 파일로 응답하고, 다른 웹글꼴은 실제 로더를 사용합니다.
 
-스크린샷은 `01-reading.png`부터 `05-user-fonts.png`까지 다섯 장이며 각각 1280×800px입니다. 작은 홍보 이미지는 `promo-440x280.png`(440×280px), 아이콘은 `public/icons/icon128.png`를 사용합니다. `scripts/store-artwork.mjs`에서 소개 문구와 홍보 이미지 구성을 수정할 수 있습니다.
+스크린샷은 `01-reading.png`부터 `05-user-fonts.png`까지 다섯 장이며 각각 1280×800px입니다. `scripts/store-artwork.mjs`에서 스크린샷 바깥의 소개 문구와 프레임을 수정할 수 있습니다.
+
+작은 홍보 이미지는 `promo-440x280.png`(440×280px), 아이콘은 `public/icons/icon128.png`를 사용합니다. 홍보 이미지 원본은 `store/artwork/promo-refraction.png`입니다. 원본의 구도와 비율을 유지해 축소하며, 실제 확장 화면을 촬영한 스크린샷과는 별도의 그래픽입니다. 홍보 이미지만 다시 만들 때는 확장을 빌드하지 않고 다음 명령을 실행합니다.
+
+```sh
+node scripts/store-promo.mjs
+```
+
+홍보 이미지와 촬영 도구 변경만으로 확장 버전을 올리거나 스토어에 새 패키지를 제출하지 않습니다.
 
 촬영 후 글꼴·이미지 로딩, 잘린 화면, 제품명과 소개 내용이 실제 기능에 맞는지 확인하세요. 이미지 규격은 [Chrome 웹 스토어 등록 기준](https://developer.chrome.com/docs/webstore/cws-dashboard-listing)을 따릅니다.
 
