@@ -148,6 +148,10 @@ async function anchorVisible(anchor: TestAnchor) {
 }
 async function seekFraction(fraction: number) {
   const slider = page.locator('#unp-navigation-host input[type="range"]');
+  // A restored anchor can already intersect the viewport while the final
+  // layout/reveal is still changing the range geometry.
+  await expect(page.locator('#unp-navigation-host')).toHaveCSS('opacity', '1');
+  await expect(page.locator('html[data-unp-preparing]')).toHaveCount(0);
   const bounds = (await slider.boundingBox())!;
   await slider.click({ position: { x: bounds.width * fraction, y: bounds.height / 2 } });
 }

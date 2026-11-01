@@ -688,7 +688,7 @@ test('first fixed terminal recommendation reserves space without a terminal effe
   expect(final.reader[0]! + final.reader[1]!).toBeLessThanOrEqual(final.service![0]! - 10);
 });
 
-test('translucent sheets keep the exact background pixels and occlude text on the sheet below', async () => {
+test('translucent sheets preserve background colors and occlude text on the sheet below', async () => {
   const paper = page.locator('#novel_drawing_page_c');
   const pixel = async (x: number, y: number) => {
     const png = await page.screenshot({ clip: { x, y, width: 1, height: 1 } });
@@ -736,7 +736,14 @@ test('translucent sheets keep the exact background pixels and occlude text on th
         incoming.append(marker);
       });
       const during = await pixel(point.x, point.y);
-      expect(during, `image=${image}, alpha=${opacity}`).toEqual(before);
+      // The Windows software compositor can round an 8-bit blend by one level
+      // compared with a separate animated layer. Keep alpha exact and allow
+      // only that rounding error; the deliberately red lower sheet must stay hidden.
+      for (let channel = 0; channel < 4; channel++)
+        expect(
+          Math.abs(during[channel]! - before[channel]!),
+          `image=${image}, alpha=${opacity}, channel=${channel}`
+        ).toBeLessThanOrEqual(channel === 3 ? 0 : 1);
       await page.locator('#unp-navigation-host input').press('Home');
       await expect(page.locator('[data-unp-page-effect]')).toHaveCount(0);
     }
