@@ -51,9 +51,26 @@ test('status operation is GET-only even when submission is enabled', async () =>
   assert.equal(calls[0].options.method, undefined);
 });
 
-test('pending review, staged approval, unknown state, warnings and version rollback never upload', async () => {
+test('another pending review defers submission without upload, publish or cancellation', async () => {
+  const calls = [];
+  const result = await runStore({
+    operation: 'submit',
+    env,
+    loadRelease,
+    fetchImpl: async (url, options) => {
+      calls.push({ url, options });
+      return response({ submittedItemRevisionStatus: revision('PENDING_REVIEW', '0.1.0') });
+    },
+  });
+  assert.equal(result.result, 'deferred-review');
+  assert.deepEqual(result.submitted.versions, ['0.1.0']);
+  assert.equal(calls.length, 1);
+  assert(calls[0].url.endsWith(':fetchStatus'));
+  assert.equal(calls[0].options.method, undefined);
+});
+
+test('staged approval, unknown state, warnings and version rollback never upload', async () => {
   const blocked = [
-    { submittedItemRevisionStatus: revision('PENDING_REVIEW', '0.1.0') },
     { submittedItemRevisionStatus: revision('STAGED', '0.1.0') },
     { submittedItemRevisionStatus: revision('FUTURE_STATE', '0.1.0') },
     { publishedItemRevisionStatus: revision('PUBLISHED', '0.3.0') },

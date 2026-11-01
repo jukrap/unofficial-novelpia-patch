@@ -45,5 +45,5 @@ export function promoHtml(resources) {
   p{font-size:13px;color:#6d6179;line-height:1.6;margin:0;width:180px}
   .scene{position:absolute;width:108px;height:108px;right:34px;top:94px;filter:drop-shadow(0 8px 14px #54299920)}
   footer{position:absolute;left:24px;bottom:17px;font-size:10px;color:#796c84}
-  </style><main><header><img alt="" src="${resources.icon}">Novelpia Patch</header><h1>읽는 방식을<br>내 취향대로.</h1><p>글꼴과 여백, 테마까지.<br>노벨피아 비공식 뷰어 확장</p><img class="scene" alt="확장 아이콘" src="${resources.icon}"><footer>COMMUNITY EXTENSION</footer></main></html>`;
+  </style><main><header><img alt="" src="${resources.icon}">Unofficial Novelpia Patch</header><h1>읽는 방식을<br>내 취향대로.</h1><p>글꼴과 여백, 테마까지.<br>노벨피아 비공식 뷰어 확장</p><img class="scene" alt="확장 아이콘" src="${resources.icon}"><footer>COMMUNITY EXTENSION</footer></main></html>`;
 }
