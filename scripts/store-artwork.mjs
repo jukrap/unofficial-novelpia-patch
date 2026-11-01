@@ -37,13 +37,13 @@ export function posterHtml(
 }
 
 export function promoHtml(resources) {
-  return `<!doctype html><html lang="ko"><meta charset="utf-8"><title>읽는 방식을 내 취향대로</title><style>
-  ${resources.css}*{box-sizing:border-box}body{margin:0;font-family:Artwork,sans-serif;background:#eee8f4;color:#262030}
-  main{width:440px;height:280px;position:relative;overflow:hidden;padding:24px}
-  header{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600}header img{width:25px;height:25px}
-  h1{font-size:33px;line-height:1.14;letter-spacing:-.8px;font-weight:600;margin:21px 0 10px;width:205px}
-  p{font-size:13px;color:#6d6179;line-height:1.6;margin:0;width:180px}
-  .scene{position:absolute;width:108px;height:108px;right:34px;top:94px;filter:drop-shadow(0 8px 14px #54299920)}
-  footer{position:absolute;left:24px;bottom:17px;font-size:10px;color:#796c84}
-  </style><main><header><img alt="" src="${resources.icon}">Unofficial Novelpia Patch</header><h1>읽는 방식을<br>내 취향대로.</h1><p>글꼴과 여백, 테마까지.<br>노벨피아 비공식 뷰어 확장</p><img class="scene" alt="확장 아이콘" src="${resources.icon}"><footer>COMMUNITY EXTENSION</footer></main></html>`;
+  return `<!doctype html><html lang="en"><meta charset="utf-8"><title>Unofficial Novelpia Patch</title><style>
+  ${resources.css}*{box-sizing:border-box}body{margin:0;font-family:Artwork,sans-serif;color:#fcf9ff}
+  main{width:440px;height:280px;position:relative;overflow:hidden;background:linear-gradient(115deg,#28163f,#432664)}
+  .pages{position:absolute;inset:0;width:100%;height:100%}
+  .brand{position:relative;display:flex;align-items:center;justify-content:center;gap:22px;height:100%;padding:0 28px}
+  .brand img{display:block;width:144px;height:144px;flex:none}
+  h1{font-size:40px;line-height:1.05;letter-spacing:-.6px;font-weight:700;margin:0}
+  h1 span{display:block}
+  </style><main><svg class="pages" viewBox="0 0 440 280" aria-hidden="true"><path d="M294-30h210v340H412Z" fill="#68468a" opacity=".22"/><path d="M317-30 435 310M331-30 449 310" fill="none" stroke="#cfb7ec" stroke-width="1" opacity=".14"/></svg><div class="brand"><img alt="" src="${resources.icon}"><h1><span>Unofficial</span><span>Novelpia</span><span>Patch</span></h1></div></main></html>`;
 }
