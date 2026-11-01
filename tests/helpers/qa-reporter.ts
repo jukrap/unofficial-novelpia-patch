@@ -5,13 +5,14 @@ import type {
   TestCase,
   TestResult,
 } from '@playwright/test/reporter';
-import { cp, mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 // @ts-expect-error Shared Node-only maintenance module.
-import { createWorkspace } from '../../scripts/qa-workspace.mjs';
+import { createWorkspace, copyFailureEvidence } from '../../scripts/qa-workspace.mjs';
 
 export default class QaReporter implements Reporter {
   private output = '';
+  private failed = false;
   private results: { test: string; status: string; durationMs: number; errors: string[] }[] = [];
   onBegin(config: FullConfig) {
     this.output = config.projects[0]!.outputDir;
@@ -25,6 +26,7 @@ export default class QaReporter implements Reporter {
     });
   }
   async onEnd(result: FullResult) {
+    this.failed = result.status !== 'passed';
     await mkdir(this.output, { recursive: true });
     await writeFile(
       path.join(this.output, 'summary.json'),
@@ -38,10 +40,12 @@ export default class QaReporter implements Reporter {
         2
       )
     );
-    // Never copy real novel screenshots into synthetic results or public artifacts.
-    if (result.status !== 'passed' && !process.env.UNP_LIVE && !process.env.UNP_FONTS_LIVE) {
+  }
+  async onExit() {
+    // All reporters have finalized attachments. Never archive real novel screens.
+    if (this.failed && !process.env.UNP_LIVE && !process.env.UNP_FONTS_LIVE) {
       const directory: string = await createWorkspace('failures');
-      await cp(this.output, path.join(directory, 'results'), { recursive: true });
+      await copyFailureEvidence(this.output, path.join(directory, 'results'));
       console.log(`Failure evidence: ${path.relative(process.cwd(), directory)}`);
     }
   }

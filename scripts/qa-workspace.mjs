@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import {
+  cp,
   mkdir,
   mkdtemp,
   readFile,
@@ -12,6 +13,17 @@ import {
 import path from 'node:path';
 
 export const qaRoot = path.resolve('.output/qa');
+export async function copyFailureEvidence(source, destination) {
+  await cp(source, destination, {
+    recursive: true,
+    // Keep finalized per-test attachments, never Playwright's temporary traces.
+    filter: (file) =>
+      !path
+        .relative(source, file)
+        .split(path.sep)
+        .some((part) => part.startsWith('.playwright-artifacts')),
+  });
+}
 export async function createWorkspace(kind, root = qaRoot) {
   assert(['profiles', 'failures'].includes(kind));
   const parent = path.join(root, kind);
