@@ -28,13 +28,7 @@ export interface FontData {
 }
 
 export type PaletteCategory =
-  | 'basic'
-  | 'nature'
-  | 'dark'
-  | 'soft'
-  | 'accent'
-  | 'warm'
-  | 'grayscale';
+  'basic' | 'nature' | 'dark' | 'soft' | 'accent' | 'warm' | 'grayscale';
 
 export interface PaletteData {
   name: string;

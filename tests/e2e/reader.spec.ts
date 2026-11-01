@@ -148,6 +148,10 @@ async function anchorVisible(anchor: TestAnchor) {
 }
 async function seekFraction(fraction: number) {
   const slider = page.locator('#unp-navigation-host input[type="range"]');
+  // A restored anchor can already intersect the viewport while the final
+  // layout/reveal is still changing the range geometry.
+  await expect(page.locator('#unp-navigation-host')).toHaveCSS('opacity', '1');
+  await expect(page.locator('html[data-unp-preparing]')).toHaveCount(0);
   const bounds = (await slider.boundingBox())!;
   await slider.click({ position: { x: bounds.width * fraction, y: bounds.height / 2 } });
 }
@@ -196,6 +200,10 @@ test('page paper stays behind every spread and includes adjustable inner margins
   const paper = page.locator('#novel_drawing_page_c');
   const body = page.locator('#novel_drawing_page');
   await expect(body).toHaveCSS('column-count', '2');
+  // Geometry exists during preparation; compare painted paper only after the
+  // reading position and navigation have been restored and the body is shown.
+  await expect(body.locator('[data-unp-line]').first()).toBeVisible();
+  await expect(page.locator('html')).not.toHaveAttribute('data-unp-preparing', '');
   const original = (await paper.boundingBox())!;
   await updateReader({ horizontalPadding: 80, verticalPadding: 60 });
   await expect(body).toHaveCSS('margin', '60px 80px');
@@ -403,6 +411,103 @@ test('terminal recommendations reserve reading space and wheel-up does not bounc
   await expect(page.locator('#test-banner')).toBeVisible();
 });
 
+for (const mode of ['scroll', 'page'] as const) {
+  test(`automatic ${mode} resume starts completed episodes at the beginning and preserves manual bookmarks`, async () => {
+    if (mode === 'page') {
+      await updateReader({ readingMode: 'page' });
+      await expect(page.locator('[data-unp-reader="page"]')).toBeVisible();
+    }
+    const navigation = page.locator('#unp-navigation-host');
+    await expect(navigation).toBeVisible();
+    await seekFraction(0.2);
+    await navigation.getByRole('button', { name: '현재 위치 북마크 저장', exact: true }).click();
+    await expect.poll(() => storedAnchor('bookmark')).toBeTruthy();
+    const manual = (await storedAnchor('bookmark'))!;
+    await seekFraction(0.85);
+    await expect
+      .poll(async () => {
+        const position = await storedAnchor('position');
+        return (
+          !!position?.blockKey && position.blockKey !== manual.blockKey && anchorVisible(position)
+        );
+      })
+      .toBe(true);
+    const before = (await storedAnchor('position'))!;
+    await page.reload();
+    await expect.poll(() => anchorVisible(before)).toBe(true);
+    await seekFraction(0.95);
+    const completed = { episodeId: '1001', completed: true };
+    await expect.poll(() => storedAnchor('position')).toEqual(completed);
+    await seekFraction(0.4);
+    await page.reload();
+    await expect(navigation).toBeVisible();
+    const viewport = page.locator(mode === 'page' ? '#novel_drawing_page_c' : '#novel_box');
+    await expect
+      .poll(() =>
+        viewport.evaluate(
+          (node, type) => (type === 'page' ? node.scrollLeft : node.scrollTop),
+          mode
+        )
+      )
+      .toBe(0);
+    // A late native restoration cannot return a completed episode to its previous end.
+    await viewport.evaluate((node, type) => {
+      if (type === 'page') node.scrollLeft = 500;
+      else node.scrollTop = 500;
+    }, mode);
+    await expect
+      .poll(() =>
+        viewport.evaluate(
+          (node, type) => (type === 'page' ? node.scrollLeft : node.scrollTop),
+          mode
+        )
+      )
+      .toBe(0);
+    await navigation.getByRole('button', { name: '북마크로 이동', exact: true }).click();
+    await expect.poll(() => anchorVisible(manual)).toBe(true);
+    expect(await storedAnchor('bookmark')).toEqual(manual);
+    expect(await storedAnchor('position')).toEqual(completed);
+    // Manual navigation and subsequent gestures release the initial-start guard.
+    await seekFraction(0.5);
+    await expect
+      .poll(() =>
+        viewport.evaluate(
+          (node, type) => (type === 'page' ? node.scrollLeft : node.scrollTop),
+          mode
+        )
+      )
+      .toBeGreaterThan(0);
+    expect(await storedAnchor('position')).toEqual(completed);
+  });
+}
+
+test('a service-only final page finishes automatic recording without a text anchor', async () => {
+  await updateReader({ readingMode: 'page', spreadMode: 'single', pageEffect: 'none' });
+  await expect(page.locator('[data-unp-reader="page"]')).toBeVisible();
+  await expect(page.locator('#unp-navigation-host')).toBeVisible();
+  await expect(page.locator('#unp-navigation-host')).toHaveCSS('opacity', '1');
+  await page.locator('#novel_drawing_page').evaluate((body) => {
+    const footer = document.createElement('div');
+    footer.dataset.service = '';
+    footer.id = 'completion-service-tail';
+    footer.style.breakBefore = 'column';
+    footer.textContent = '합성 서비스 안내만 있는 마지막 쪽';
+    body.append(footer);
+  });
+  const end = page.getByRole('slider', { name: '본문 페이지', exact: true });
+  await end.press('End');
+  await expect(page.locator('#completion-service-tail')).toBeInViewport();
+  expect(
+    await page.locator('#novel_drawing_page').evaluate((body) => {
+      const v = body.parentElement!.getBoundingClientRect();
+      return [...body.querySelectorAll('.line')].some((line) =>
+        [...line.getClientRects()].some((r) => r.right > v.left + 1 && r.left < v.right - 1)
+      );
+    })
+  ).toBe(false);
+  await expect.poll(() => storedAnchor('position')).toEqual({ episodeId: '1001', completed: true });
+});
+
 test('latest automatic position resumes on re-entry and back while manual bookmarks remain separate', async () => {
   await seekFraction(0.2);
   await page
@@ -440,6 +545,41 @@ test('latest automatic position resumes on re-entry and back while manual bookma
   expect(await storedAnchor('bookmark')).toEqual(saved);
 });
 
+test('a quick persisted return waits for the pending completion write before restoring', async () => {
+  await expect(page.locator('#unp-navigation-host')).toBeVisible();
+  await seekFraction(0.2);
+  await expect.poll(() => storedAnchor('position')).toBeTruthy();
+  const worker = context.serviceWorkers()[0]!;
+  await worker.evaluate(() => {
+    const set = chrome.storage.local.set.bind(chrome.storage.local);
+    const state = globalThis as typeof globalThis & { completionWriteWaiting?: boolean };
+    chrome.storage.local.set = async (items: Record<string, unknown>) => {
+      if ((items['unp.position.v1.1001'] as { completed?: boolean } | undefined)?.completed) {
+        state.completionWriteWaiting = true;
+        await new Promise((resolve) => setTimeout(resolve, 600));
+      }
+      return set(items);
+    };
+  });
+  await seekFraction(0.95);
+  await expect
+    .poll(() =>
+      worker.evaluate(
+        () =>
+          (globalThis as typeof globalThis & { completionWriteWaiting?: boolean })
+            .completionWriteWaiting
+      )
+    )
+    .toBe(true);
+  await page.evaluate(() => {
+    window.dispatchEvent(new PageTransitionEvent('pagehide', { persisted: true }));
+    document.getElementById('novel_box')!.scrollTop = 0;
+    window.dispatchEvent(new PageTransitionEvent('pageshow', { persisted: true }));
+  });
+  await expect.poll(() => storedAnchor('position')).toEqual({ episodeId: '1001', completed: true });
+  await expect.poll(() => page.locator('#novel_box').evaluate((node) => node.scrollTop)).toBe(0);
+});
+
 for (const returnPath of ['history return', 'persisted page-show'] as const) {
   test(`middle-button autoscroll after ${returnPath} is not pulled back to the restored anchor`, async () => {
     await seekFraction(0.35);
@@ -449,9 +589,15 @@ for (const returnPath of ['history return', 'persisted page-show'] as const) {
       await page.goto(`${base}/outside`);
       await page.goBack();
     } else {
+      // Observe completion of pagehide's worker write before simulating a later
+      // record from another document. Direct storage edits bypass that queue.
+      await context
+        .serviceWorkers()[0]!
+        .evaluate(() => chrome.storage.local.remove('unp.position.v1.1001'));
       await page.evaluate(() =>
         window.dispatchEvent(new PageTransitionEvent('pagehide', { persisted: true }))
       );
+      await expect.poll(() => storedAnchor('position')).toEqual(anchor);
       anchor = { ...anchor, blockKey: '85', textOffset: 0 };
       await context.serviceWorkers()[0]!.evaluate(async (anchor) => {
         await chrome.storage.local.set({ 'unp.position.v1.1001': anchor });
@@ -916,10 +1062,8 @@ test('content bookmarks survive typography, narrow layout, mode changes and relo
 test('legacy native bookmarks remain available until explicitly cleared', async () => {
   await page.evaluate(() => {
     localStorage.setItem('bookmark_1001', '3');
-    localStorage.setItem('viewer_paging', '1');
   });
-  await updateReader({ maxWidth: 540 });
-  await page.reload();
+  await updateReader({ maxWidth: 540, readingMode: 'page' });
   await expect(page.locator('#novel_drawing_page')).toHaveCSS('column-count', '2');
   await page
     .locator('#unp-navigation-host')
@@ -943,9 +1087,7 @@ test('legacy native bookmarks remain available until explicitly cleared', async 
 });
 
 test('page mode contains native outer overflow without preventing page turns or scroll mode', async () => {
-  await page.evaluate(() => localStorage.setItem('viewer_paging', '1'));
-  await updateReader({ maxWidth: 540, pageEffect: 'slide' });
-  await page.reload();
+  await updateReader({ maxWidth: 540, pageEffect: 'slide', readingMode: 'page' });
   await expect(page.locator('#novel_drawing_page')).toHaveAttribute('data-unp-reader', 'page');
   // Match the native forced scrollbar and a small overflowing decoration at the
   // viewport edge, including the fractional layout seen with browser zoom.
@@ -1733,12 +1875,12 @@ test('ten preset cards show real samples and applying a card updates other readi
     '종이',
     '어두움',
     '큰 글씨',
-    '고대비',
-    '회색 종이',
-    '세피아',
-    '짙은 보라',
     '좁은 본문',
     '넓은 본문',
+    '밝은 돌빛',
+    '옅은 녹색',
+    '짙은 청회색',
+    '차분한 보라',
   ]);
   await expect(catalog.getByTestId('typography-preview')).toHaveCount(10);
   await expect(page.locator('.preset-browser, .preset-pagination, .current-preset')).toHaveCount(0);
@@ -1750,7 +1892,14 @@ test('ten preset cards show real samples and applying a card updates other readi
   const paper = presetCard(page, '종이');
   await paper.scrollIntoViewIfNeeded();
   await expect(paper.getByTestId('typography-preview')).toHaveCSS('font-size', '20px');
-  await paper.getByRole('button', { name: '종이 적용', exact: true }).click();
+  await Promise.all([
+    page.waitForEvent('load'),
+    paper.getByRole('button', { name: '종이 적용', exact: true }).click(),
+  ]);
+  await expect(page.locator('[data-unp-reader="page"]')).toBeVisible();
+  await expect(page.locator('#unp-navigation-host')).toHaveCSS('opacity', '1');
+  await openSettings();
+  await settingsSection(page, '프리셋');
   await expect(paper).toContainText('현재 사용 중');
   await expect(page.locator('.line[data-line="3"]')).toHaveCSS('font-size', '20px');
   await expect(optionsPreview).toHaveCSS('font-size', '20px');
@@ -1837,14 +1986,13 @@ test('page layout reflows and native service counters agree across spreads', asy
 
 test('adjustable page gaps preserve native final-page counts and navigation can overlay the paper', async () => {
   await page.setViewportSize({ width: 1600, height: 900 });
-  await page.evaluate(() => localStorage.setItem('viewer_paging', '1'));
   await updateReader({
+    readingMode: 'page',
     maxWidth: 540,
     horizontalPadding: 20,
     pageNavigationPlacement: 'reserved',
     pageEffect: 'none',
   });
-  await page.reload();
   const paper = page.locator('#novel_drawing_page_c');
   const body = page.locator('#novel_drawing_page');
   await expect(body).toHaveCSS('column-count', '2');
@@ -1892,11 +2040,7 @@ for (const mode of ['scroll', 'page'] as const) {
   for (const width of [1440, 390]) {
     test(`reading height centers the ${mode} viewport and navigation really overlays at ${width}px`, async () => {
       await page.setViewportSize({ width, height: 900 });
-      await page.evaluate(
-        (mode) => localStorage.setItem('viewer_paging', mode === 'page' ? '1' : '0'),
-        mode
-      );
-      await page.reload();
+      await updateReader({ readingMode: mode });
       await expect(page.locator(`[data-unp-reader="${mode}"]`)).toBeVisible();
       const frame = page.locator(mode === 'page' ? '#novel_drawing_page_c' : '#novel_box');
       const nav = page.getByRole('navigation', { name: '본문 탐색과 북마크' });
@@ -2127,6 +2271,8 @@ test('a late native initial-position callback does not undo the latest page inte
 });
 
 test('scroll anchor survives font changes, viewport changes and mode switch', async () => {
+  await expect(page.locator('#unp-navigation-host')).toBeVisible();
+  await expect(page.locator('#unp-navigation-host')).toHaveCSS('opacity', '1');
   await page.locator('#novel_box').evaluate((el) => {
     el.scrollTop = 1800;
   });

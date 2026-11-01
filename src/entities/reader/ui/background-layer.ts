@@ -3,6 +3,8 @@ import { resolveBackgroundImage } from '@/shared/platform/background-assets';
 import { StyleLedger } from '../lib/ledger';
 import type { BackgroundFrame } from './viewport';
 import type { PageBackdrop } from './page-paper';
+import { animateElement, type MotionPlayback } from '@/shared/lib/motion';
+import { motionDuration } from '@/shared/config/motion';
 
 export type ReaderBackgroundStatus = 'idle' | 'loading' | 'ready' | 'error';
 const rgba = (hex: string, opacity: number) =>
@@ -150,7 +152,7 @@ export class ReaderBackground {
     if (
       settings.backgroundType !== 'image' ||
       (settings.backgroundImageSource === 'url' && !settings.backgroundImage) ||
-      (settings.backgroundImageSource === 'file' && !settings.backgroundAssetId)
+      (settings.backgroundImageSource !== 'url' && !settings.backgroundAssetId)
     ) {
       if (this.current) this.unmount(this.current.element);
       this.current?.release();
@@ -182,7 +184,7 @@ export class ReaderBackground {
         this.syncPaintOwnership();
         this.positionLayers();
         this.current = { element, ...resolved };
-        let animation: Animation | undefined;
+        let animation: MotionPlayback | undefined;
         let finished = false;
         const finish = () => {
           if (finished) return;
@@ -197,10 +199,14 @@ export class ReaderBackground {
           this.settings.backgroundImageFade &&
           !matchMedia('(prefers-reduced-motion: reduce)').matches
         ) {
-          animation = element.animate([{ opacity: 0 }, { opacity: element.style.opacity || '1' }], {
-            duration: 800,
-            easing: 'ease-in-out',
-          });
+          animation = animateElement(
+            element,
+            [{ opacity: 0 }, { opacity: element.style.opacity || '1' }],
+            {
+              duration: motionDuration.background * 1000,
+              easing: 'ease-in-out',
+            }
+          );
           void animation.finished.then(finish, finish);
         } else finish();
         this.report('ready', '');

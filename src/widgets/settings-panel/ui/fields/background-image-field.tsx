@@ -1,3 +1,4 @@
+import { MotionButton } from '@/shared/ui/motion-button';
 import { useEffect, useRef, useState } from 'react';
 import type { Settings } from '@/shared/model/preferences';
 import {
@@ -13,6 +14,7 @@ import { DelayedLoading } from '@/shared/ui/loading-indicator';
 import { Row } from './controls';
 import { SelectControl } from '@/shared/ui/select-control';
 import styles from './background-image-field.css?inline';
+import { BUILTIN_BACKGROUNDS } from '@/shared/config/backgrounds';
 
 export function BackgroundImageField({
   settings,
@@ -105,7 +107,27 @@ export function BackgroundImageField({
       <style>{styles}</style>
       <div className="background-image-field" aria-busy={busy}>
         <div className="segments" aria-label="배경 이미지 출처">
-          <button
+          <MotionButton
+            type="button"
+            disabled={busy}
+            className={source === 'builtin' ? 'active' : ''}
+            aria-pressed={source === 'builtin'}
+            onClick={() => {
+              discardBackgroundAsset(current.current);
+              setError('');
+              onChange({
+                backgroundImageSource: 'builtin',
+                backgroundAssetId: BUILTIN_BACKGROUNDS.some(
+                  (item) => item.id === settings.backgroundAssetId
+                )
+                  ? settings.backgroundAssetId
+                  : BUILTIN_BACKGROUNDS[0].id,
+              });
+            }}
+          >
+            기본 배경
+          </MotionButton>
+          <MotionButton
             type="button"
             disabled={busy}
             className={source === 'url' ? 'active' : ''}
@@ -116,21 +138,38 @@ export function BackgroundImageField({
             }}
           >
             주소
-          </button>
-          <button
+          </MotionButton>
+          <MotionButton
             type="button"
             disabled={busy}
             className={source === 'file' ? 'active' : ''}
             aria-pressed={source === 'file'}
             onClick={() => {
               setError('');
-              onChange({ backgroundImageSource: 'file' });
+              onChange({
+                backgroundImageSource: 'file',
+                ...(BUILTIN_BACKGROUNDS.some((item) => item.id === settings.backgroundAssetId)
+                  ? { backgroundAssetId: null }
+                  : {}),
+              });
             }}
           >
             파일
-          </button>
+          </MotionButton>
         </div>
-        {source === 'url' ? (
+        {source === 'builtin' ? (
+          <>
+            <SelectControl
+              label="기본 배경 이미지"
+              value={settings.backgroundAssetId ?? ''}
+              options={BUILTIN_BACKGROUNDS.map((item) => ({ value: item.id, label: item.name }))}
+              onChange={(value) => onChange({ backgroundAssetId: value })}
+            />
+            <p className="background-file-note">
+              확장에 포함되어 있어 파일 등록 없이 사용할 수 있습니다.
+            </p>
+          </>
+        ) : source === 'url' ? (
           <input
             aria-label="배경 이미지 주소"
             type="url"
@@ -165,10 +204,10 @@ export function BackgroundImageField({
                   if (file) void chooseFile(file);
                 }}
               />
-              <button type="button" disabled={busy} onClick={() => input.current?.click()}>
+              <MotionButton type="button" disabled={busy} onClick={() => input.current?.click()}>
                 <DelayedLoading busy={busy} label="이미지 확인 중" variant="spinner" /> 파일 선택
-              </button>
-              <button
+              </MotionButton>
+              <MotionButton
                 type="button"
                 disabled={busy}
                 aria-expanded={managing}
@@ -180,7 +219,7 @@ export function BackgroundImageField({
                 }}
               >
                 등록 이미지 관리
-              </button>
+              </MotionButton>
             </div>
             <p className="background-file-note">
               이 브라우저에만 보관합니다. 설정 파일에는 이미지가 포함되지 않습니다. JPEG, PNG, WebP,
@@ -204,7 +243,7 @@ export function BackgroundImageField({
                             : '사용하지 않는 이미지'}
                         </small>
                       </div>
-                      <button
+                      <MotionButton
                         type="button"
                         disabled={
                           busy ||
@@ -226,7 +265,7 @@ export function BackgroundImageField({
                         }}
                       >
                         삭제
-                      </button>
+                      </MotionButton>
                     </div>
                   ))
                 ) : (

@@ -1,3 +1,4 @@
+import { MotionButton } from '@/shared/ui/motion-button';
 import { useSyncExternalStore, type CSSProperties } from 'react';
 import type { ReaderEngine, BookmarkStore } from '@/entities/reader';
 const paths = {
@@ -64,7 +65,7 @@ export function ReaderNavigation({
   return (
     <nav aria-label="본문 탐색과 북마크" className={dark ? 'dark' : ''}>
       <div className="bookmarks">
-        <button
+        <MotionButton
           aria-label="현재 위치 북마크 저장"
           title="현재 본문 위치에 북마크 저장"
           aria-pressed={!!bookmark.anchor}
@@ -72,8 +73,8 @@ export function ReaderNavigation({
           onClick={onSave}
         >
           <Symbol name="bookmark" />
-        </button>
-        <button
+        </MotionButton>
+        <MotionButton
           aria-label="북마크로 이동"
           title={
             bookmark.anchor
@@ -84,25 +85,25 @@ export function ReaderNavigation({
           onClick={onRestore}
         >
           <Symbol name="restore" />
-        </button>
+        </MotionButton>
         {hasBookmark ? (
-          <button
+          <MotionButton
             aria-label="북마크 해제"
             title="북마크 해제"
             onClick={() => void bookmarks.clear()}
           >
             <Symbol name="clear" />
-          </button>
+          </MotionButton>
         ) : null}
       </div>
-      <button
+      <MotionButton
         className="previous"
         aria-label={pageMode ? '이전 쪽' : '이전 위치'}
         disabled={max === 0 || value <= 0}
         onClick={() => engine.move(-1)}
       >
         <Symbol name="previous" />
-      </button>
+      </MotionButton>
       <input
         className="progress"
         aria-label={pageMode ? '본문 페이지' : '본문 읽기 진행률'}
@@ -114,23 +115,35 @@ export function ReaderNavigation({
         value={value}
         disabled={max === 0}
         style={{ '--progress': `${state.progress * 100}%` } as CSSProperties}
-        onChange={(e) =>
-          pageMode
-            ? engine.goTo(Number(e.target.value) * state.columns + 1)
-            : engine.seek(Number(e.target.value) / max)
-        }
+        onKeyDown={(event) => {
+          if (
+            event.altKey ||
+            event.ctrlKey ||
+            event.metaKey ||
+            (event.key !== 'Home' && event.key !== 'End')
+          )
+            return;
+          // A range emits no change when already at its endpoint. Still preserve
+          // the explicit destination if a late service reflow changes its max.
+          event.preventDefault();
+          engine.seek(event.key === 'End' ? 1 : 0, pageMode);
+        }}
+        onChange={(e) => {
+          const range = e.currentTarget;
+          engine.seek(Number(range.value) / Math.max(1, Number(range.max)), pageMode);
+        }}
       />
       <output className="position" data-testid="reader-page" aria-live="off">
         {label}
       </output>
-      <button
+      <MotionButton
         className="next"
         aria-label={pageMode ? '다음 쪽' : '다음 위치'}
         disabled={max === 0 || value >= max}
         onClick={() => engine.move(1)}
       >
         <Symbol name="next" />
-      </button>
+      </MotionButton>
       {bookmark.error ? <p role="alert">{bookmark.error}</p> : null}
     </nav>
   );
@@ -142,7 +155,7 @@ nav{--paper:#ffffff;--ink:#292630;--accent:#7632ff;--track:#dcd7e5;display:grid;
 .dark{--paper:#24212b;--ink:#efedf3;--accent:#b79aff;--track:#554d63;background:#24212b;color:#efedf3;border-color:#69616f}
 .bookmarks{display:flex;gap:2px;padding-right:8px;border-right:1px solid var(--track)}
 button{display:grid;place-items:center;width:32px;height:32px;border:0;border-radius:4px;background:transparent;color:inherit;cursor:pointer;padding:4px}
-button:hover{background:#7632ff14}button[aria-pressed=true]{color:var(--accent)}button[aria-pressed=true] svg{fill:#7632ff20}button:disabled{opacity:.35;cursor:default}
+button[data-motion-hover]{background:#7632ff14}button[aria-pressed=true]{color:var(--accent)}button[aria-pressed=true] svg{fill:#7632ff20}button:disabled{opacity:.35;cursor:default}
 .position{min-width:72px;text-align:center;font-size:13px;font-variant-numeric:tabular-nums;white-space:nowrap}
 input{appearance:none;width:100%;min-width:0;height:32px;margin:0;background:transparent;cursor:pointer;touch-action:none}
 input::-webkit-slider-runnable-track{height:5px;border-radius:3px;background:linear-gradient(to right,var(--accent) var(--progress),var(--track) var(--progress))}

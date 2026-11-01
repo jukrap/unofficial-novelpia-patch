@@ -3,8 +3,20 @@ import { inputIsBusy, type ReaderRoots } from '../lib/site';
 
 export const positionKey = (episode: string) => `unp.position.v1.${episode}`;
 
+export function completedPosition(value: unknown, episode: string): boolean {
+  return (
+    !!value &&
+    typeof value === 'object' &&
+    'episodeId' in value &&
+    value.episodeId === episode &&
+    'completed' in value &&
+    value.completed === true
+  );
+}
+
 export function resumeAnchor(episode: string, ...candidates: unknown[]): ReadingAnchor | null {
   for (const candidate of candidates) {
+    if (completedPosition(candidate, episode)) return null;
     const anchor = parseAnchor(candidate);
     if (anchor?.episodeId === episode) return anchor;
   }

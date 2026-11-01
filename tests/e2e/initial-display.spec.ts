@@ -489,9 +489,15 @@ test('a slow image falls back after three seconds, and late completion never hid
   expect(reveal.time - marked.time).toBeLessThan(4500);
   expect(reveal.image).toBe(false);
   expect(reveal.paper).toBe('rgb(35, 51, 68)');
-  await page.locator('#novel_box').evaluate((box) => {
-    box.scrollTop = 400;
-  });
+  await expect(page.locator('#unp-navigation-host')).toHaveCSS('opacity', '1');
+  // Use a reading gesture after the fallback is presented, rather than racing
+  // a programmatic scroll against the initial restoration/reveal.
+  const start = await page.locator('#novel_box').evaluate((box) => box.scrollTop);
+  await page.mouse.move(700, 300);
+  await page.mouse.wheel(0, 400);
+  await expect
+    .poll(() => page.locator('#novel_box').evaluate((box) => box.scrollTop))
+    .toBe(start + 400);
   const position = await page.locator('#novel_box').evaluate((box) => box.scrollTop);
   pending.release();
   await expect(page.locator('[data-unp-background]')).toBeVisible();

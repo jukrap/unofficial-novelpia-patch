@@ -1,5 +1,7 @@
+import { MotionButton } from '@/shared/ui/motion-button';
 import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
-import { Icon } from './icon';
+import { MotionChevron } from './motion-chevron';
+import { usePopoverMotion } from './use-popover-motion';
 
 export function Dropdown({
   label,
@@ -21,6 +23,7 @@ export function Dropdown({
   const [open, setOpen] = useState(false);
   const button = useRef<HTMLButtonElement>(null);
   const popup = useRef<HTMLDivElement>(null);
+  const popupMotion = usePopoverMotion(popup);
   const anchor = useRef({ left: 0, top: 0 });
   const placement = useRef({ down: true, upper: 12 });
   const previousViewportKey = useRef(viewportKey);
@@ -46,7 +49,7 @@ export function Dropdown({
     menu.style.height = `${Math.ceil(height)}px`;
   };
   const close = () => {
-    if (popup.current?.matches(':popover-open')) popup.current.hidePopover();
+    popupMotion.hide();
     setOpen(false);
     button.current?.focus({ preventScroll: true });
   };
@@ -82,6 +85,7 @@ export function Dropdown({
     }
     menu.style.left = `${Math.max(12, Math.min(rect.left, innerWidth - width - 12))}px`;
     alignPopup();
+    popupMotion.reveal();
     setOpen(true);
     menu.querySelector<HTMLElement>('button,input')?.focus({ preventScroll: true });
   };
@@ -111,7 +115,7 @@ export function Dropdown({
     const menu = popup.current!;
     const root = menu.getRootNode();
     const dismiss = () => {
-      if (menu.matches(':popover-open')) menu.hidePopover();
+      popupMotion.hide();
       setOpen(false);
     };
     const scroll = (event: Event) => {
@@ -143,7 +147,7 @@ export function Dropdown({
         }
       }}
     >
-      <button
+      <MotionButton
         ref={button}
         type="button"
         className="dropdown-trigger"
@@ -154,10 +158,8 @@ export function Dropdown({
         onClick={() => (open ? close() : show())}
       >
         {trigger}
-        <span className="chevron">
-          <Icon name="chevron" />
-        </span>
-      </button>
+        <MotionChevron open={open} />
+      </MotionButton>
       <div
         ref={popup}
         id={id}

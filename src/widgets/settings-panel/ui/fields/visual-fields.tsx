@@ -1,3 +1,4 @@
+import { MotionButton } from '@/shared/ui/motion-button';
 import { useSyncExternalStore, type ReactNode } from 'react';
 import { subscribeFonts, getFontCatalog } from '@/shared/platform/user-fonts';
 import type { Settings } from '@/shared/model/preferences';
@@ -16,6 +17,7 @@ import { ReadingPreview } from '../reading-preview';
 import { SelectControl } from '@/shared/ui/select-control';
 import { BackgroundImageField } from './background-image-field';
 import { FontRetryScope } from '../../model/font-retry';
+import { ReadingModeFields } from './reading-mode-fields';
 
 export type VisualSection = 'text' | 'layout' | 'appearance';
 export function VisualSettingsFields({
@@ -29,7 +31,7 @@ export function VisualSettingsFields({
   after,
   preview = true,
   rememberColors = true,
-  showPageGap = true,
+  readingContext = 'preset',
   onBackgroundBusyChange,
 }: {
   section: VisualSection;
@@ -42,7 +44,7 @@ export function VisualSettingsFields({
   after?: ReactNode;
   preview?: boolean;
   rememberColors?: boolean;
-  showPageGap?: boolean;
+  readingContext?: 'viewer' | 'settings' | 'preset';
   onBackgroundBusyChange?: (busy: boolean) => void;
 }) {
   useSyncExternalStore(subscribeFonts, getFontCatalog);
@@ -105,30 +107,30 @@ export function VisualSettingsFields({
           )}
           <Row label="줄바꿈 방식">
             <div className="segments">
-              <button
+              <MotionButton
                 type="button"
                 className={settings.wordBreakMode === 'normal' ? 'active' : ''}
                 aria-pressed={settings.wordBreakMode === 'normal'}
                 onClick={() => onChange({ wordBreakMode: 'normal' })}
               >
                 언어별
-              </button>
-              <button
+              </MotionButton>
+              <MotionButton
                 type="button"
                 className={settings.wordBreakMode === 'keep-all' ? 'active' : ''}
                 aria-pressed={settings.wordBreakMode === 'keep-all'}
                 onClick={() => onChange({ wordBreakMode: 'keep-all' })}
               >
                 단어 단위
-              </button>
-              <button
+              </MotionButton>
+              <MotionButton
                 type="button"
                 className={settings.wordBreakMode === 'break-all' ? 'active' : ''}
                 aria-pressed={settings.wordBreakMode === 'break-all'}
                 onClick={() => onChange({ wordBreakMode: 'break-all' })}
               >
                 글자 단위
-              </button>
+              </MotionButton>
             </div>
           </Row>
         </SettingGroup>
@@ -141,11 +143,7 @@ export function VisualSettingsFields({
     return (
       <>
         {before}
-        {showPageGap ? (
-          <SettingGroup title="페이지 간격">
-            <NumberControl name="pageGap" settings={settings} onChange={onChange} />
-          </SettingGroup>
-        ) : null}
+        <ReadingModeFields settings={settings} onChange={onChange} context={readingContext} />
         <SettingGroup title="본문 영역">
           {(
             ['maxWidth', 'readerHeightPercent', 'horizontalPadding', 'verticalPadding'] as const
@@ -171,22 +169,22 @@ export function VisualSettingsFields({
       <SettingGroup title="바깥 배경">
         <Row label="배경 타입">
           <div className="segments">
-            <button
+            <MotionButton
               type="button"
               className={settings.backgroundType === 'color' ? 'active' : ''}
               aria-pressed={settings.backgroundType === 'color'}
               onClick={() => onChange({ backgroundType: 'color' })}
             >
               단색
-            </button>
-            <button
+            </MotionButton>
+            <MotionButton
               type="button"
               className={settings.backgroundType === 'image' ? 'active' : ''}
               aria-pressed={settings.backgroundType === 'image'}
               onClick={() => onChange({ backgroundType: 'image' })}
             >
               이미지
-            </button>
+            </MotionButton>
           </div>
         </Row>
         <ColorControl

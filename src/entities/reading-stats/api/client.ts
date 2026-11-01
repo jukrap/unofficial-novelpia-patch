@@ -1,4 +1,5 @@
 import { chromeStorage, hasExtensionContext, type StoragePort } from '@/shared/platform/storage';
+import { observableState } from '@/shared/model/observable-state';
 import {
   emptyStats,
   STATS_CHANNEL,
@@ -14,17 +15,17 @@ const send: StatsTransport = async (command) => {
   if (!hasExtensionContext())
     throw new Error('확장 연결이 종료되었습니다. 이 페이지를 새로고침해 주세요.');
   const reply = (await chrome.runtime.sendMessage({ channel: STATS_CHANNEL, ...command })) as
-    | { ok: true; snapshot: ReadingStatsSnapshot }
-    | { ok: false; error: string }
-    | undefined;
+    { ok: true; snapshot: ReadingStatsSnapshot } | { ok: false; error: string } | undefined;
   if (!reply?.ok)
     throw new Error(reply?.error || '통계에 연결하지 못했습니다. 다시 시도해 주세요.');
   return reply.snapshot;
 };
 
 export class ReadingStatsClient {
-  private snapshot = { ...emptyStats };
-  private listeners = new Set<() => void>();
+  readonly state = observableState<ReadingStatsSnapshot>({ ...emptyStats });
+  private get snapshot() {
+    return this.state.getState();
+  }
   private stop = () => {};
   private initialized = false;
   private disposed = false;
@@ -36,18 +37,12 @@ export class ReadingStatsClient {
     private transport: StatsTransport = send
   ) {}
 
-  getSnapshot = () => this.snapshot;
-  subscribe = (listener: () => void) => {
-    this.listeners.add(listener);
-    return () => {
-      this.listeners.delete(listener);
-    };
-  };
+  getSnapshot = this.state.getState;
+  subscribe = this.state.subscribe;
 
   private publish(snapshot: ReadingStatsSnapshot) {
     if (this.disposed) return;
-    this.snapshot = snapshot;
-    this.listeners.forEach((listener) => listener());
+    this.state.setState(snapshot, true);
   }
 
   private async request(command: ReadingStatsCommand) {
@@ -96,6 +91,6 @@ export class ReadingStatsClient {
     this.disposed = true;
     this.revision++;
     this.stop();
-    this.listeners.clear();
+    this.state.dispose();
   }
 }

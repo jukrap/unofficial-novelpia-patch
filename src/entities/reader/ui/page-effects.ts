@@ -2,6 +2,8 @@ import type { Settings } from '@/shared/model/preferences';
 import { visibleServiceRects, type PageSnapshot } from './page-snapshot';
 import { StyleLedger } from '../lib/ledger';
 import { livePageEffect } from './live-page-effect';
+import { animateElement, type MotionPlayback } from '@/shared/lib/motion';
+import { motionDuration } from '@/shared/config/motion';
 
 type PaperModule = typeof import('./paper-effect');
 let paperModule: PaperModule | undefined;
@@ -173,7 +175,7 @@ export class PageEffects {
       ledger.set(container, '--unp-transition-paper-image', 'none');
     }
     body.dataset.unpTransition = '';
-    let animations: Animation[] = [];
+    let animations: MotionPlayback[] = [];
     let releasePaper: (() => void) | undefined;
     let deadline: ReturnType<typeof setTimeout> | undefined;
     let cancelled = false;
@@ -225,17 +227,19 @@ export class PageEffects {
       const incoming = spread(to);
       host.append(incoming, outgoing);
       const timing: KeyframeAnimationOptions = {
-        duration: 240,
+        duration: motionDuration.page * 1000,
         easing: 'cubic-bezier(.2,.6,.2,1)',
         fill: 'both',
       };
       if (effect === 'slide') {
         animations = [
-          outgoing.animate(
+          animateElement(
+            outgoing,
             [{ transform: 'translateX(0)' }, { transform: `translateX(${-direction * 100}%)` }],
             timing
           ),
-          incoming.animate(
+          animateElement(
+            incoming,
             [{ transform: `translateX(${direction * 100}%)` }, { transform: 'translateX(0)' }],
             timing
           ),
@@ -244,8 +248,16 @@ export class PageEffects {
         // Sequential fades avoid displaying two paragraphs through each other.
         // Keep the stationary paper during the handover so only text fades.
         animations = [
-          outgoing.animate([{ opacity: 1 }, { opacity: 0, offset: 0.5 }, { opacity: 0 }], timing),
-          incoming.animate([{ opacity: 0 }, { opacity: 0, offset: 0.5 }, { opacity: 1 }], timing),
+          animateElement(
+            outgoing,
+            [{ opacity: 1 }, { opacity: 0, offset: 0.5 }, { opacity: 0 }],
+            timing
+          ),
+          animateElement(
+            incoming,
+            [{ opacity: 0 }, { opacity: 0, offset: 0.5 }, { opacity: 1 }],
+            timing
+          ),
         ];
       }
       void Promise.all(animations.map((animation) => animation.finished)).then(finish, finish);

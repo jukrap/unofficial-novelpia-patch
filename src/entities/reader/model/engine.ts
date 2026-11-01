@@ -2,6 +2,7 @@ import type { Settings } from '@/shared/model/preferences';
 import type { NativeClient } from '@/shared/platform/native';
 import { emphasisHighlight, emphasisShadow } from '@/shared/config/emphasis';
 import { captureAnchor, rangeForAnchor, type ReadingAnchor } from './anchor';
+import type { AutomaticPosition } from './automatic-position';
 import { pageGeometry, countPages, COLUMN_GAP, type Geometry } from '../lib/geometry';
 import { fontFamily, FontLoader, effectiveWeight, authorWeight } from '../lib/fonts';
 import { StyleLedger } from '../lib/ledger';
@@ -48,7 +49,7 @@ ${emphasisSelector}{font-weight:var(--unp-author-weight) !important}
 [data-unp-transition] [data-unp-line]{opacity:0 !important}
 `;
 const rgba = (hex: string, opacity: number) =>
-  `rgba(${parseInt(hex.slice(1, 3), 16)},${parseInt(hex.slice(3, 5), 16)},${parseInt(hex.slice(5, 7), 16)},${opacity / 100})`;
+  `rgba(${parseInt(hex.slice(1, 3), 16)},${parseInt(hex.slice(3, 5), 16)},${parseInt(hex.slice(5, 7), 16)},calc(${opacity / 100} * var(--unp-initial-alpha,1)))`;
 export class ReaderEngine {
   private ledger = new StyleLedger();
   private fonts: FontLoader;
@@ -65,6 +66,7 @@ export class ReaderEngine {
   private resize: ResizeObserver;
   private mutations: MutationObserver;
   private frame = 0;
+  private layoutRevision = 0;
   private disposed = false;
   private geometry: Geometry | null = null;
   private state: ReaderState;
@@ -91,7 +93,7 @@ export class ReaderEngine {
     readonly roots: ReaderRoots,
     settings: Settings,
     private native: NativeClient,
-    private saveAnchor: (anchor: ReadingAnchor) => void,
+    private saveAnchor: (anchor: AutomaticPosition, progress: number) => void,
     resources?: { fonts: FontLoader }
   ) {
     this.fonts = resources?.fonts ?? new FontLoader();
@@ -165,6 +167,12 @@ export class ReaderEngine {
     this.schedule();
   }
   getSnapshot = () => this.state;
+  getPresentationLayout() {
+    return {
+      revision: this.layoutRevision,
+      pending: !!this.frame || this.syncing || this.pendingServiceLayout,
+    };
+  }
   present() {
     if (!this.state.presentationReady) this.publish({ presentationReady: true });
   }
@@ -234,7 +242,8 @@ export class ReaderEngine {
     return this.initialAnchor ?? captureAnchor(this.roots) ?? this.anchor;
   }
   getResumeAnchor() {
-    return this.resume.canSave ? this.getAnchor() : null;
+    // A provisional layout (before fonts/resume settle) is not reading progress.
+    return this.resume.canSave && this.state.presentationReady ? this.getAnchor() : null;
   }
   restore(anchor: ReadingAnchor | null, explicit = false) {
     if (anchor?.episodeId === this.roots.episodeId) {
@@ -257,17 +266,31 @@ export class ReaderEngine {
     this.preserveEnd = false;
     return this.resume.begin();
   }
-  completeResume(ticket: number, anchor: ReadingAnchor | null, readSucceeded = true) {
+  completeResume(
+    ticket: number,
+    anchor: ReadingAnchor | null,
+    readSucceeded = true,
+    startAtBeginning = false
+  ) {
     if (this.disposed) return;
     const result = this.resume.complete(ticket, anchor, readSucceeded);
     if (!result) return;
     if (result.anchor) this.restore(result.anchor);
     else if (result.saveCurrent) this.persistSoon();
+    else if (startAtBeginning) {
+      // Keep the cover/start ahead of late native callbacks until an actual reading gesture.
+      this.initialPage = 1;
+      this.anchor = null;
+      this.schedule();
+    }
   }
   flushPosition() {
     clearTimeout(this.saveTimer);
+    if (!this.resume.canSave || !this.state.presentationReady) return;
     const anchor = this.getResumeAnchor();
-    if (anchor) this.saveAnchor(anchor);
+    if (anchor) this.saveAnchor(anchor, this.state.progress);
+    else if (this.state.progress >= 0.9)
+      this.saveAnchor({ episodeId: this.roots.episodeId }, this.state.progress);
   }
   refreshServiceRegion() {
     const region = document.querySelector<HTMLElement>('.curation-wrapper');
@@ -618,7 +641,9 @@ export class ReaderEngine {
           const extra = Math.max(0, Math.max(overlayTail, serviceTail) - naturalTail);
           this.ledger.set(text, 'padding-bottom', `${this.originalTextPadding + extra}px`);
         }
-        if (this.preserveEnd) {
+        if (this.initialPage === 1) {
+          box.scrollTop = 0;
+        } else if (this.preserveEnd) {
           box.scrollTop = box.scrollHeight - box.clientHeight;
           this.initialAnchor = null;
         } else if (previous) this.restoreNow(previous);
@@ -639,6 +664,8 @@ export class ReaderEngine {
       this.anchor = this.getAnchor();
     } catch (error) {
       this.publish({ error: String(error) });
+    } finally {
+      this.layoutRevision++;
     }
   }
   private restoreNow(anchor: ReadingAnchor) {
@@ -679,13 +706,16 @@ export class ReaderEngine {
     if (progress !== this.state.progress || max !== this.state.scrollRange)
       this.publish({ progress, scrollRange: max });
   }
-  seek(progress: number) {
+  seek(progress: number, animate = false) {
     this.resume.userIntent();
     if (this.roots.mode === 'page') {
+      // Cancelling an effect can finish a deferred service reflow and change the
+      // page count. Resolve the requested fraction only after that layout settles.
+      this.cancelTransitions();
       const count = Math.ceil(this.state.pages / this.state.columns);
       this.goTo(
         Math.round(Math.max(0, Math.min(1, progress)) * (count - 1)) * this.state.columns + 1,
-        false
+        animate
       );
       return;
     }

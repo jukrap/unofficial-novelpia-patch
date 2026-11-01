@@ -31,7 +31,10 @@ test.beforeEach(async () => {
   await (context.serviceWorkers()[0] ? Promise.resolve() : context.waitForEvent('serviceworker'));
   page = await context.newPage();
   await page.goto(base);
-  await expect(page.locator('[data-unp-line]').first()).toBeAttached();
+  // Runtime invalidation starts from an initialized reader, after the initial
+  // native-mode adoption and pending settings write have completed.
+  await expect(page.locator('[data-unp-line]').first()).toBeVisible();
+  await expect(page.locator('#unp-navigation-host')).toHaveCSS('opacity', '1');
 });
 test.afterEach(async () => {
   await context.close();
@@ -50,8 +53,7 @@ async function update(patch: Record<string, unknown>) {
 for (const mode of ['scroll', 'page'] as const) {
   test(`extension invalidation retires the old ${mode} reader without API errors or an automatic page reload`, async () => {
     if (mode === 'page') {
-      await page.evaluate(() => localStorage.setItem('viewer_paging', '1'));
-      await page.reload();
+      await update({ readingMode: 'page' });
     }
     await expect(page.locator(`[data-unp-reader="${mode}"]`)).toBeVisible();
     await page.locator('#btn_theme').click();
@@ -157,8 +159,7 @@ test('external mode change leaves navigation under user control and requests a r
 });
 
 test('native lists can hide a paged reader across resize and settings changes then restore it', async () => {
-  await page.evaluate(() => localStorage.setItem('viewer_paging', '1'));
-  await page.reload();
+  await update({ readingMode: 'page' });
   await expect(page.locator('[data-unp-reader="page"]')).toBeVisible();
   // The root exists during initial preparation; exercise navigation once text is readable.
   await expect(page.locator('[data-unp-line]').first()).toBeVisible();

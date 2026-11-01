@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from 'react';
 import { SettingsPanel, type PanelProps } from '@/widgets/settings-panel';
 import type { ReaderEngine } from '@/entities/reader';
+import { MotionRoot } from '@/shared/ui/motion-root';
 export function ViewerPanel({ engine, ...props }: PanelProps & { engine: ReaderEngine | null }) {
   // The panel only needs status; scrolling should update the navigation, not every setting.
   const error = useSyncExternalStore(
@@ -16,11 +17,13 @@ export function ViewerPanel({ engine, ...props }: PanelProps & { engine: ReaderE
     () => engine?.getSnapshot().backgroundError ?? ''
   );
   return (
-    <SettingsPanel
-      {...props}
-      reader={{ error, fontStatus, backgroundError }}
-      onRetryFont={engine?.retryFont}
-    />
+    <MotionRoot>
+      <SettingsPanel
+        {...props}
+        reader={{ error, fontStatus, backgroundError }}
+        onRetryFont={engine?.retryFont}
+      />
+    </MotionRoot>
   );
 }
 const emptySubscribe = () => () => {};

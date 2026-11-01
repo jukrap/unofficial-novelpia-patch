@@ -1,3 +1,4 @@
+import { MotionButton } from '@/shared/ui/motion-button';
 import { useEffect, useRef, useState } from 'react';
 import { FontLoader, fontFamily } from '@/entities/reader';
 import type { UserFont } from '@/shared/model/user-font';
@@ -46,9 +47,9 @@ export function UserFontPreview({ font, loader }: { font: UserFont; loader: Font
       {error ? (
         <p className="field-error">
           {error}{' '}
-          <button type="button" onClick={() => setAttempt((n) => n + 1)}>
+          <MotionButton type="button" onClick={() => setAttempt((n) => n + 1)}>
             다시 시도
-          </button>
+          </MotionButton>
         </p>
       ) : null}
     </div>
