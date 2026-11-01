@@ -486,6 +486,25 @@ test('late in-flow recommendations recount the terminal page without losing the 
   await slider.press('End');
   await expect.poll(visible).toBe(true);
   await expect(page.locator('.curation-wrapper')).toBeVisible();
+  // A momentary visible frame is insufficient: native recommendations must not
+  // alternate the terminal page count and move the live button every few frames.
+  await expect
+    .poll(() =>
+      page.evaluate(async () => {
+        const samples = new Set<string>();
+        for (let i = 0; i < 12; i++) {
+          await new Promise(requestAnimationFrame);
+          const c = document.getElementById('novel_drawing_page_c')!;
+          const rect = document.getElementById('late-terminal-service')!.getBoundingClientRect();
+          const recommendation = document.querySelector('.curation-wrapper')!;
+          samples.add(
+            JSON.stringify([c.scrollLeft, rect.x, rect.y, getComputedStyle(recommendation).display])
+          );
+        }
+        return samples.size;
+      })
+    )
+    .toBe(1);
   await page.locator('#late-terminal-service button').click();
   await expect(page.locator('#late-terminal-service')).toHaveAttribute('data-clicked', 'yes');
 });
