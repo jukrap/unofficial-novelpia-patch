@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { appendFile } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
 import { readRelease } from './release-package.mjs';
 import { compareVersions } from './release-check.mjs';
@@ -55,9 +56,7 @@ export function submissionDecision(status, version) {
   if (submitted?.state === 'PENDING_REVIEW') {
     const versions = submitted.distributionChannels?.map((channel) => channel.crxVersion) ?? [];
     if (versions.includes(version)) return 'already-submitted';
-    throw new Error(
-      '다른 버전이 심사 중입니다. 심사를 취소하지 않았습니다. 완료 후 다시 실행해 주세요.'
-    );
+    return 'deferred-review';
   }
   const publishedVersions =
     published?.distributionChannels?.map((channel) => channel.crxVersion) ?? [];
@@ -164,7 +163,16 @@ export async function runStore({
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   runStore({ operation: process.argv[2] })
-    .then((result) => console.log(JSON.stringify(result, null, 2)))
+    .then(async (result) => {
+      console.log(JSON.stringify(result, null, 2));
+      if (result.result === 'deferred-review') {
+        const message =
+          '다른 버전이 심사 중이므로 제출을 보류했습니다. 기존 심사는 유지됩니다. 심사 완료 후 이 제출 작업을 다시 실행해 주세요.';
+        console.log(`${process.env.GITHUB_ACTIONS === 'true' ? '::notice::' : ''}${message}`);
+        if (process.env.GITHUB_STEP_SUMMARY)
+          await appendFile(process.env.GITHUB_STEP_SUMMARY, `## 스토어 제출 보류\n\n${message}\n`);
+      }
+    })
     .catch((error) => {
       console.error(error.message);
       process.exitCode = 1;
