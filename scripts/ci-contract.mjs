@@ -88,3 +88,7 @@ export function successfulFullRun(run, jobs, { repository, repositoryId, now = D
     )
   );
 }
+
+export function canReuseBrowserEvidence(eventName, operation) {
+  return eventName !== 'workflow_dispatch' || operation === 'release';
+}

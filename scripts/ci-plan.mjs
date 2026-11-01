@@ -3,6 +3,7 @@ import { execFileSync } from 'node:child_process';
 import { appendFile, readFile } from 'node:fs/promises';
 import {
   affectsRelease,
+  canReuseBrowserEvidence,
   checkScope,
   inputFingerprint,
   packageReleaseInput,
@@ -61,9 +62,10 @@ const api = async (path) => {
   return response.json();
 };
 let reused = '';
-// A user-requested verify is always fresh. Forks neither supply nor consume evidence.
+// Manual verify is always fresh; release retries may reuse the same proven inputs.
+// Forks neither supply nor consume evidence.
 if (
-  !manual &&
+  canReuseBrowserEvidence(process.env.GITHUB_EVENT_NAME, process.env.CI_OPERATION) &&
   ['full', 'focused'].includes(scope.mode) &&
   (!event.pull_request || event.pull_request.head.repo?.id === event.repository.id)
 ) {
