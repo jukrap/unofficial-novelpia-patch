@@ -2,6 +2,8 @@
 
 이 문서는 GitHub Actions의 검증·빌드와 Chrome 웹 스토어 제출을 연결하는 운영 절차입니다. Actions 활성화와 스토어 자동 제출은 별도 설정입니다. 실제 실행 상태는 [Actions](https://github.com/jukrap/unofficial-novelpia-patch/actions), 버전별 파일은 [Releases](https://github.com/jukrap/unofficial-novelpia-patch/releases)에서 확인하세요. 최초 심사 제출 전에는 `CWS_SUBMIT_ENABLED=false`를 유지합니다.
 
+사용자가 설치하는 공개 버전은 [Chrome 웹 스토어](https://chromewebstore.google.com/detail/unofficial-novelpia-patch/iijfbkikffomenjplfdpfgdbbfnhcpdo)에서 확인합니다. GitHub 릴리스와 스토어 심사·공개는 서로 다른 단계이므로 버전이 일시적으로 다를 수 있습니다.
+
 ## 무엇이 자동으로 실행되나요?
 
 ```text

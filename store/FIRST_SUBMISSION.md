@@ -1,6 +1,8 @@
 # Chrome 웹 스토어 첫 등록
 
-처음 한 번은 개발자 대시보드에서 새 항목을 만들고 ZIP을 올립니다. 이후의 버전 업데이트는 [배포 워크플로](../docs/RELEASE.md)로 처리할 수 있습니다. ZIP 업로드와 심사 제출은 서로 다른 단계입니다.
+이 프로젝트는 [Chrome 웹 스토어](https://chromewebstore.google.com/detail/unofficial-novelpia-patch/iijfbkikffomenjplfdpfgdbbfnhcpdo)에 게시되어 있습니다. 기존 항목을 업데이트할 때는 새 항목을 만들지 않고 [배포 운영](../docs/RELEASE.md#재실행과-실패)을 따릅니다.
+
+아래는 새 항목을 처음 등록할 때의 절차입니다. ZIP 업로드와 심사 제출은 서로 다른 단계입니다.
 
 ## 1. 제출 파일 준비
 

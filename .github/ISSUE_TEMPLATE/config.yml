@@ -1,5 +1,8 @@
 blank_issues_enabled: false
 contact_links:
+  - name: Chrome 웹 스토어에서 설치
+    url: https://chromewebstore.google.com/detail/unofficial-novelpia-patch/iijfbkikffomenjplfdpfgdbbfnhcpdo
+    about: 확장 소개와 공개 버전을 확인하고 Chrome에 설치하세요.
   - name: 사용 안내와 문제 해결
     url: https://github.com/jukrap/unofficial-novelpia-patch/blob/main/docs/USAGE.md
     about: 테마박스·프리셋·등록 파일·읽던 위치 사용 방법을 확인하세요.

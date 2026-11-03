@@ -1,5 +1,7 @@
 # 사용 안내
 
+[Chrome 웹 스토어에서 설치](https://chromewebstore.google.com/detail/unofficial-novelpia-patch/iijfbkikffomenjplfdpfgdbbfnhcpdo)한 뒤, 노벨피아 회차를 새로고침하고 테마박스를 열어 주세요.
+
 **프리셋으로 시작해 마음에 드는 부분만 바꾸는 방법**을 권합니다. 프리셋은 적용하기 전에 살펴볼 수 있고, 내 프리셋으로 복제해 따로 저장할 수 있습니다.
 
 1. 회차에서 테마박스를 열고 **프리셋 → 적용**을 누릅니다.
