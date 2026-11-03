@@ -1,6 +1,6 @@
 # Chrome 웹 스토어 등록 자료
 
-첫 등록용 초안입니다. 심사 제출이나 공개 완료를 의미하지 않습니다. 저장소 공개 검토와 개인정보 안내 URL 접근 확인을 마친 뒤 사용합니다.
+스토어 소개와 업데이트 검토에 사용하는 자료입니다. 현재 공개된 소개·스크린샷·버전은 [Chrome 웹 스토어](https://chromewebstore.google.com/detail/unofficial-novelpia-patch/iijfbkikffomenjplfdpfgdbbfnhcpdo)에서 확인하세요. 이 문서를 수정해도 스토어 등록정보가 자동으로 바뀌지는 않습니다.
 
 ## 기본 정보
 
@@ -13,7 +13,7 @@
 - 지원: https://github.com/jukrap/unofficial-novelpia-patch/issues
 - 개인정보 안내: https://github.com/jukrap/unofficial-novelpia-patch/blob/main/docs/PRIVACY.md
 
-현재 저장소가 비공개라면 위 URL은 일반 사용자에게 열리지 않습니다. 공개 전환과 비로그인 접근 확인 전에는 스토어에 제출하지 않습니다. 개발자 연락처는 대시보드에 등록된 실제 연락처를 사용하며 소스에 기록하지 않습니다.
+링크를 바꾸면 로그아웃한 브라우저에서도 열리는지 확인합니다. 개발자 연락처는 대시보드에 등록된 실제 연락처를 사용하며 소스에 기록하지 않습니다.
 
 ## 상세 설명
 

@@ -1,6 +1,8 @@
 # 문서 안내
 
-처음 사용한다면 **설치 → 사용 안내**, 문제가 있다면 **자주 묻는 질문**부터 확인하세요.
+**[Chrome 웹 스토어에서 설치하기](https://chromewebstore.google.com/detail/unofficial-novelpia-patch/iijfbkikffomenjplfdpfgdbbfnhcpdo)**
+
+처음 사용한다면 **설치 → 사용 안내**, 문제가 있다면 **자주 묻는 질문**부터 확인하세요. 이미 개발용 확장을 사용하고 있다면 설치 안내의 설정 이전 절차를 먼저 읽어 주세요.
 
 ## 사용자 안내
 
