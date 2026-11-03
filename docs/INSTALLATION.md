@@ -10,11 +10,19 @@ Chrome 120 이상에서 사용하는 데스크톱 확장프로그램입니다. �
 
 ## Chrome 웹 스토어
 
-현재 Chrome 웹 스토어 심사 중입니다. 승인 후 이 문서와 README에 설치 링크를 추가하겠습니다.
+**[Chrome 웹 스토어에서 설치하기](https://chromewebstore.google.com/detail/unofficial-novelpia-patch/iijfbkikffomenjplfdpfgdbbfnhcpdo)**
 
-스토어 설치본은 Chrome의 확장 업데이트 기능으로 갱신됩니다. 새 버전의 심사·공개와 각 브라우저에 전달되는 시점에는 차이가 있습니다.
+1. 스토어에서 **Chrome에 추가**를 누르고 확장프로그램을 설치합니다.
+2. 이미 열려 있던 노벨피아 회차를 새로고침합니다.
+3. 회차의 **테마박스**를 열어 프리셋을 고르거나 읽기 설정을 조절합니다.
+
+스토어 설치에는 개발자 모드나 별도 빌드가 필요하지 않습니다. 예전 개발용 설치본을 사용했다면 삭제하기 전에 [설정 이전 안내](#개발용-확장에서-스토어-확장으로-이전)를 확인하세요.
+
+스토어 설치본은 Chrome의 확장 업데이트 기능으로 갱신됩니다. GitHub 릴리스가 먼저 나와도 스토어 심사와 배포가 끝나기 전에는 설치되는 버전이 다를 수 있습니다. 현재 공개 버전은 스토어 페이지에서 확인하세요. 새 버전이 각 브라우저에 전달되는 시점에도 차이가 있습니다.
 
 ## 개발자 모드로 설치
+
+소스를 수정하거나 배포 ZIP을 직접 확인할 때 사용하는 방법입니다. 일반적인 사용에는 위의 스토어 설치를 권합니다.
 
 ### 1. 확장 폴더 만들기
 
@@ -30,7 +38,7 @@ pnpm run build
 
 일반 확장 폴더는 `.output/chrome-mv3`입니다. `.output/chrome-mv3-e2e`는 합성 테스트 주소용이므로 노벨피아에서 사용할 설치본이 아닙니다.
 
-[GitHub Releases](https://github.com/jukrap/unofficial-novelpia-patch/releases)에 검증된 Chrome ZIP이 공개되어 있다면, 직접 빌드하는 대신 ZIP을 빈 폴더에 풀어 사용할 수 있습니다. 미공개 초안이나 Actions 테스트 산출물을 설치하지 마세요.
+[GitHub Releases](https://github.com/jukrap/unofficial-novelpia-patch/releases)의 Chrome ZIP을 사용하면 직접 빌드할 필요 없이 빈 폴더에 압축을 풀면 됩니다. 아래의 Chrome 등록 절차부터 진행하세요. 소스 코드 ZIP이나 Actions 테스트 산출물은 설치용 파일이 아닙니다.
 
 ### 2. Chrome에 등록
 

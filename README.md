@@ -3,6 +3,7 @@
   <h1>Unofficial Novelpia Patch</h1>
   <p><strong>읽는 방식부터, 내 취향대로.</strong></p>
   <p>노벨피아 뷰어의 글꼴·여백·배경을 바꾸고,<br>스크롤이나 책처럼 넘기는 화면으로 읽을 수 있는 비공식 Chrome 확장프로그램입니다.</p>
+  <p><strong><a href="https://chromewebstore.google.com/detail/unofficial-novelpia-patch/iijfbkikffomenjplfdpfgdbbfnhcpdo">Chrome 웹 스토어에서 설치하기</a></strong></p>
   <p><a href="docs/INSTALLATION.md">설치 안내</a> · <a href="docs/USAGE.md">사용 안내</a> · <a href="docs/FAQ.md">자주 묻는 질문</a> · <a href="https://github.com/jukrap/unofficial-novelpia-patch/issues/new/choose">문의·제안</a></p>
   <p>Chrome 120 이상 · MIT License</p>
 </div>
@@ -11,9 +12,9 @@
 
 ## 설치
 
-현재 Chrome 웹 스토어 심사 중입니다. 승인 후 설치 링크를 안내하겠습니다.
+[Chrome 웹 스토어](https://chromewebstore.google.com/detail/unofficial-novelpia-patch/iijfbkikffomenjplfdpfgdbbfnhcpdo)에서 **Chrome에 추가**를 누르면 설치됩니다. 설치 후 열려 있던 노벨피아 회차를 새로고침하고 **테마박스**를 열어 보세요.
 
-먼저 사용해 보려면 [최신 릴리스](https://github.com/jukrap/unofficial-novelpia-patch/releases/latest)의 ZIP을 받아 [개발자 모드 설치 안내](docs/INSTALLATION.md#개발자-모드로-설치)를 따라 설치하세요.
+스토어 설치본은 자동으로 업데이트됩니다. 기존 개발용 확장의 설정을 옮기거나 소스·ZIP으로 직접 설치하려면 [설치와 업데이트 안내](docs/INSTALLATION.md)를 참고하세요.
 
 ## 주요 기능
 
